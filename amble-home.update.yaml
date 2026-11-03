@@ -9,8 +9,9 @@
 # Assistant with an Install button; pressing it makes the box download that chip's
 # OTA image, check its MD5 and reboot into it. The box never installs on its own.
 # A manifest it cannot fetch makes no new offer; an offer already shown stays until
-# the next successful check, and Install still verifies the image before anything
-# is written.
+# the next successful check. Install writes the download to the inactive OTA
+# partition and verifies its checksum before switching to it; a failed download or
+# checksum check leaves the current firmware running.
 
 substitutions:
   # The bench points a build at a test manifest with -s amble_update_source <url>.
