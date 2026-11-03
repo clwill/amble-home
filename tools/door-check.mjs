@@ -4,7 +4,7 @@
 // the region list; take-over has no controls; a failed sign-in clears the password
 // field in the same tick it says "Signing in…", shows the credentials copy and
 // leaves the page's own message alone; an offline failure shows the network copy;
-// an account with two meshes shows the picker; a normal fetch lists rows, pre-ticks
+// an account with two meshes shows the picker; a normal fetch lists rows, pre-checks
 // the fixture the box already has, and shows the change line and the skipped line;
 // then the database door still takes a file (spikes/03-importer/amaran.db, skipped
 // with a note if absent).
@@ -53,8 +53,8 @@ export async function fetchMesh(region, token) {
     fx("m1", 3, "AA:BB:CC:00:00:01", "Fixture One"),
     fx("m1", 5, "AA:BB:CC:00:00:03", "Fixture Three"),
     fx("m1", 7, "AA:BB:CC:00:0", "Broken Record"),
-    { ...fx("m1", 9, "AA:BB:CC:00:00:03", "Fixture Three Again"), update_time: 1 },  // same MAC as Fixture Three, older: skipped (#34)
-    { ...fx("m1", 5, "AA:BB:CC:00:00:05", "Fixture Five On Three's Address"), update_time: 1 },  // same address as Fixture Three, older: skipped (#36)
+    { ...fx("m1", 9, "AA:BB:CC:00:00:03", "Fixture Three Again"), update_time: 1 },  // same MAC as Fixture Three, older: skipped
+    { ...fx("m1", 5, "AA:BB:CC:00:00:05", "Fixture Five On Three's Address"), update_time: 1 },  // same address as Fixture Three, older: skipped
   ];
   if (token === "two@example.invalid") {
     return { meshs: { existing: [mesh("m1"), mesh("m2")] }, fixtures: { existing: [...base, fx("m2", 4, "AA:BB:CC:00:00:09", "Other Mesh Light")] } };
@@ -244,7 +244,7 @@ try {
   await submit(); await settle("#acct-msg");
   const pb = await page.$$eval("#acct-pick button", (b) => b.map((x) => ({ d: x.disabled, t: x.textContent })));
   check(pb.length === 2, `onegood: picker shows ${pb.length} buttons`);
-  check(pb.length === 2 && !pb[0].d && pb[1].d && /no fixtures/.test(pb[1].t), "onegood: second button disabled, labelled no fixtures");
+  check(pb.length === 2 && !pb[0].d && pb[1].d && /no fixtures/.test(pb[1].t), "onegood: second button disabled, labeled no fixtures");
   check((await page.$$eval("#rows tr", (t) => t.length)) === 0, "onegood: no rows before a choice");
   await (await page.$("#acct-pick button[data-uuid]")).click();
   await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
@@ -259,10 +259,10 @@ try {
   await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
   const rows = await page.$$eval("#rows tr", (t) => t.map((tr) => ({ n: tr.children[1].textContent, c: !!tr.querySelector("input")?.checked })));
   const ticked = rows.filter((r) => r.c).length;
-  console.log(`      rows: ${rows.length}, pre-ticked: ${ticked}`);
-  check(rows.length === 3 && ticked === 1 && rows[0].c, "fetch: 3 rows (2 fetched + 1 gone), the configured fixture pre-ticked");
+  console.log(`      rows: ${rows.length}, pre-checked: ${ticked}`);
+  check(rows.length === 3 && ticked === 1 && rows[0].c, "fetch: 3 rows (2 fetched + 1 gone), the configured fixture pre-checked");
   const line = await text("#fixtures-msg");
-  check(/^Fetched 2 fixture\(s\) from your amaran account\. Tick the ones this box should control, then Save\./.test(line), "fetch: fixtures line carries the result");
+  check(/^Fetched 2 fixture\(s\) from your amaran account\. Check the ones this box should control, then Save\./.test(line), "fetch: fixtures line carries the result");
   check(/Since the box was last saved: 1 new, 1 no longer in your account/.test(line), "fetch: change line present");
   check(/3 records skipped: bad MAC ×1, duplicate MAC ×1, duplicate address ×1\./.test(line), "fetch: skipped line present, counts only (bad MAC, duplicate MAC, duplicate address)");
   check(!/Broken Record|Again|Five/.test(line), "fetch: skipped line names nothing");

@@ -1,5 +1,5 @@
 """Spike 1 component (throwaway): make the amaran BLE-mesh stack part of an
-ESPHome esp-idf build and keep it linked. Never transmits. See issue #4."""
+ESPHome esp-idf build and keep it linked. Never transmits."""
 
 import esphome.codegen as cg
 import esphome.config_validation as cv

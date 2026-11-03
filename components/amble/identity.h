@@ -1,5 +1,5 @@
 #pragma once
-// Safety state for mesh identities this box has used (#25, review D1). A mesh
+// Safety state for mesh identities this box has used. A mesh
 // node's replay protection lives in the fixtures, keyed by (network, source
 // address, sequence number): if the box ever returns to an identity it used
 // before with a restarted sequence number, fixtures drop its commands as

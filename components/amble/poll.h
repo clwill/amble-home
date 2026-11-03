@@ -1,7 +1,7 @@
 #pragma once
 // Sparse, staggered status polling so Home Assistant tracks changes made outside
 // it (the amaran app, a wall switch). Pure and header-only: host-tested.
-// Spike 2 / #5 finding: the box cannot rely on overhearing the app's traffic.
+// Spike 2 finding: the box cannot rely on overhearing the app's traffic.
 #include <cstdint>
 
 #include "fixture.h"

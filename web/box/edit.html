@@ -8,8 +8,8 @@
 /* theme:start */
 /* amble-home visual system. One source: web/box/build.mjs copies this block into
    home.html, edit.html and web/flasher/index.html between the theme markers.
-   World: a studio control surface read in a dim room. Dark only, by decision
-   (#28): one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
+   World: a studio control surface read in a dim room. Dark only, by decision:
+   one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
    purpose: the box serves these pages offline over its own Wi-Fi, so there is no
    font to fetch, and the flasher keeps the same face so the two feel like one. */
 :root {
@@ -68,7 +68,7 @@ tr.dark td, tr.na td { color: var(--muted); }
 td.lamp-cell { width: 2.4rem; padding-right: 0; }
 td.summary { text-align: right; white-space: nowrap; }
 
-/* The lamp: a fixture rendered in its own colour. --c is the colour it is showing,
+/* The lamp: a fixture rendered in its own color. --c is the color it is showing,
    --g the glow strength. Off: an outline. Never heard: a dashed outline. */
 .lamp { display: inline-block; width: 1.35rem; height: 1.35rem; border-radius: .4rem; vertical-align: middle;
   background: var(--c, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--line)) 70%, var(--line));
@@ -167,13 +167,13 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; border-top: 
 </form>
 <p id="acct-msg" class="muted"></p>
 <div id="acct-pick"></div>
-<p id="acct-explain" class="explain">Your amaran password goes to this box over your home network, is used for one sign-in, and is not stored, unless you tick Remember. The box hands back a one-time token and this page reads your mesh.</p>
+<p id="acct-explain" class="explain">Your amaran password goes to this box over your home network, is used for one sign-in, and is not stored, unless you check Remember. The box hands back a one-time token and this page reads your mesh.</p>
 </div>
 <!-- cloud:end -->
 <div id="door-db" class="panel door">
 <h3>The app's database</h3>
 <input type="file" id="file" accept=".db,.sqlite,application/octet-stream">
-<p class="explain">Open the amaran desktop app's <code>amaran.db</code>. It is read <strong>in this browser</strong>; only the fixtures you tick and the mesh keys they need are sent to this box, on your network.</p>
+<p class="explain">Open the amaran desktop app's <code>amaran.db</code>. It is read <strong>in this browser</strong>; only the fixtures you check and the mesh keys they need are sent to this box, on your network.</p>
 <details id="where">
 <summary>Where is amaran.db?</summary>
 <p>A web page cannot search your disk, but the file dialog can jump straight to the folder.</p>
@@ -192,7 +192,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; border-top: 
 <p id="fixtures-msg" class="muted" hidden></p>
 <p id="rows-empty">Fixtures appear here once you fetch them.</p>
 <table hidden><thead><tr><th></th><th>Name</th><th>Mesh id</th><th></th><th></th></tr></thead><tbody id="rows"></tbody></table>
-<div class="bar"><button id="save" class="primary" disabled>Save</button><span class="muted">Save activates the ticked fixtures and reboots the box.</span></div>
+<div class="bar"><button id="save" class="primary" disabled>Save</button><span class="muted">Save activates the checked fixtures and reboots the box.</span></div>
 <div class="bar"><button id="setpin">Set PIN</button><span id="pin" class="muted"></span></div>
 <p id="msg" class="muted"></p>
 <script type="module">

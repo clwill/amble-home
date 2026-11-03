@@ -73,7 +73,7 @@ test("lockedText rounds up the wait", () => {
   assert.equal(lockedText({}), "Locked after too many wrong PINs; try again in 30 s");
 });
 
-test("rows_reject_malformed_mac (D1): no id, cannot be ticked, nothing unescaped reaches the row", () => {
+test("rows_reject_malformed_mac (D1): no id, cannot be checked, nothing unescaped reaches the row", () => {
   const evil = { fixtures: [{ mac: '"><img src=x onerror=alert(1)>', address: 40, name: "<b>Evil</b>", caps: {} }] };
   assert.equal(idFor(evil.fixtures[0].mac), null);
   const rows = rowsFor(evil, status);
@@ -127,7 +127,7 @@ test("swatch: CCT warm is redder than cool, HSI keeps its hue, off and unheard h
   assert.equal(swatchFor({ on: false, brightness: 500, mode: "cct", kelvin: 5600 }), null);
   assert.equal(swatchFor({ heard: false }), null);
 });
-test("lamp html carries only numbers and our own colour string, never user text", () => {
+test("lamp html carries only numbers and our own color string, never user text", () => {
   const s = { configured: true, fixtures: [{ id: "a", name: "<x>", heard: true, live: true, on: true, brightness: 1000, mode: "cct", kelvin: 5600 }, { id: "b", name: "L", heard: false }] };
   const [onLine, naLine] = renderStatus(s);
   assert.match(lampHtml(onLine), /^<span class="lamp" style="--c:rgb\(\d+ \d+ \d+\);--g:1\.00" aria-label="on"><\/span>$/);

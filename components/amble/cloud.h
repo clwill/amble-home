@@ -25,7 +25,7 @@ struct CloudJob {
   void wipe();  // zeroes every byte through a volatile pointer (the compiler may not elide it)
 };
 
-// Stored in NVS under key "cloud" (namespace "amble") only when the person ticked Remember.
+// Stored in NVS under key "cloud" (namespace "amble") only when the person checked Remember.
 struct CloudSaved {
   uint32_t magic;
   char email[CLOUD_EMAIL_MAX + 1];

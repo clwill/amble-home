@@ -59,7 +59,7 @@ enum class ParseError : uint8_t {
 ParseError parse_import_payload(const char *json, size_t len, Config *out);
 
 // The box's own mesh address: a 16-bit seed folded into 0x4000..0x7FFF, then
-// stepped past any fixture that already holds it (#25). The seed is random,
+// stepped past any fixture that already holds it. The seed is random,
 // chosen once on the box's first boot and kept in NVS (amble.cpp), so the
 // address is stable for the life of the configuration and an erase gives the
 // box a genuinely new identity (review D4: a box returning at a known address

@@ -2,7 +2,7 @@
 # browser flasher installs on an S3 and what CI builds (amble-home-c6.yaml is the
 # ESP32-C6 twin; everything shared is in amble-home.common.yaml). Built for 8 MB
 # of flash and no PSRAM, so one image runs on every S3 board in the README table,
-# the 16 MB boards included (#24).
+# the 16 MB boards included.
 #
 # Guard: a release build may address exactly the fixtures in its own table, by
 # unicast; group/broadcast sends are compiled out. Chris's studio configuration

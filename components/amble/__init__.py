@@ -157,7 +157,7 @@ async def to_code(config):
 
     # The mesh counters are created at boot, not by codegen, so their unit string
     # has to be in the firmware's unit table here. With a unit and a total-increasing
-    # state class HA graphs them instead of writing every tick to the logbook (#22).
+    # state class HA graphs them instead of writing every tick to the logbook.
     from esphome.core.entity_helpers import register_unit_of_measurement
     cg.add_define("USE_ENTITY_UNIT_OF_MEASUREMENT")
     cg.add_define("AMBLE_UOM_MSG_IDX", register_unit_of_measurement("msg"))

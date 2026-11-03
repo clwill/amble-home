@@ -13,8 +13,8 @@
 /* theme:start */
 /* amble-home visual system. One source: web/box/build.mjs copies this block into
    home.html, edit.html and web/flasher/index.html between the theme markers.
-   World: a studio control surface read in a dim room. Dark only, by decision
-   (#28): one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
+   World: a studio control surface read in a dim room. Dark only, by decision:
+   one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
    purpose: the box serves these pages offline over its own Wi-Fi, so there is no
    font to fetch, and the flasher keeps the same face so the two feel like one. */
 :root {
@@ -73,7 +73,7 @@ tr.dark td, tr.na td { color: var(--muted); }
 td.lamp-cell { width: 2.4rem; padding-right: 0; }
 td.summary { text-align: right; white-space: nowrap; }
 
-/* The lamp: a fixture rendered in its own colour. --c is the colour it is showing,
+/* The lamp: a fixture rendered in its own color. --c is the color it is showing,
    --g the glow strength. Off: an outline. Never heard: a dashed outline. */
 .lamp { display: inline-block; width: 1.35rem; height: 1.35rem; border-radius: .4rem; vertical-align: middle;
   background: var(--c, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--line)) 70%, var(--line));
@@ -164,7 +164,7 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; border-top: 
 <ul class="plain">
   <li>A computer running <strong>Chrome or Edge</strong>. Firefox, Safari and phones cannot flash (no Web Serial).</li>
   <li>An <strong>ESP32-S3 or ESP32-C6</strong> board from the README's boards table (8 MB of flash or more; PSRAM not needed). Older ESP32 chips are not supported.</li>
-  <li>A USB <em>data</em> cable in the port that is <strong>not</strong> labelled <strong>COM</strong> or <strong>UART</strong>. A board with one port uses that one.</li>
+  <li>A USB <em>data</em> cable in the port that is <strong>not</strong> labeled <strong>COM</strong> or <strong>UART</strong>. A board with one port uses that one.</li>
 </ul>
 
 <h2>Steps</h2>
@@ -172,14 +172,14 @@ footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; border-top: 
   <li>Plug the board into the computer.</li>
   <li>Put it into install mode: <strong>hold BOOT, tap RESET, release BOOT</strong>. (The M5Stack Atom has no BOOT button: hold its side button for about two seconds until the LED turns green.) This only opens the board for installing; it does not clear anything.</li>
   <li>Press <strong>Connect</strong> and pick <strong>USB JTAG/serial debug unit</strong> in the port list.</li>
-  <li>Choose <strong>Install</strong> and let it run (one to three minutes). On a fresh board, tick <em>erase</em> when offered.</li>
+  <li>Choose <strong>Install</strong> and let it run (one to three minutes). On a fresh board, check <em>erase</em> when offered.</li>
   <li>When it says <em>Installation complete</em>, <strong>tap RESET once</strong> (or unplug the board and plug it back in). A board put into install mode by hand stays there after the flash until it is reset, so the page would otherwise offer to install again.</li>
   <li>Press <strong>Connect</strong> again, pick the same port, and choose <strong>Connect to Wi-Fi</strong>. If you skip this, the box starts its own network called <code>amble-home-</code> plus six letters; join it and a setup page appears.</li>
   <li>Once the box is on your Wi-Fi, choose <strong>Visit Device</strong> to set up your amble-home for your fixtures: it opens the box's Home page; follow <strong>Edit</strong> to import them from the amaran app's database or your amaran account. From any other browser the box is <a href="http://amble-home.local/">http://amble-home.local/</a> (its full name is <code>amble-home-</code> plus six letters). The README has the walk-through.</li>
 </ol>
 
 <h2>Updating or recovering a box</h2>
-<p class="muted">Flash the new version from this page the same way. <strong>If the page offers to erase the device, leave that unticked</strong>: your Wi-Fi, fixtures and PIN stay. Tick it only for a clean start, after which you set up Wi-Fi and import your fixtures again. One exception: a box flashed before 2026-10-30 carries the old 16 MB flash layout, and the first install of the current image lays the flash out afresh, so that box asks for its Wi-Fi and fixtures again once, erase ticked or not. ESPHome's command line can also send the <code>.ota.bin</code> for your chip over the network; a hosted update feed for Home Assistant comes with the public release.</p>
+<p class="muted">Flash the new version from this page the same way. <strong>If the page offers to erase the device, leave that unchecked</strong>: your Wi-Fi, fixtures and PIN stay. Tick it only for a clean start, after which you set up Wi-Fi and import your fixtures again. One exception: a box flashed before 2026-10-30 carries the old 16 MB flash layout, and the first install of the current image lays the flash out afresh, so that box asks for its Wi-Fi and fixtures again once, erase checked or not. ESPHome's command line can also send the <code>.ota.bin</code> for your chip over the network; a hosted update feed for Home Assistant comes with the public release.</p>
 
 <footer>amble-home is open source (MIT). The box never phones home; the only thing this page downloads is the firmware image next to it.</footer>
 

@@ -12,7 +12,7 @@
 
 esphome:
   # Every box is amble-home-xxxxxx (its MAC's last six hex digits), on the network
-  # and in Home Assistant, so two boxes never share a name (#25). The bare
+  # and in Home Assistant, so two boxes never share a name. The bare
   # amble-home.local still answers (amble: mdns_alias) for homes with one box.
   name: amble-home
   friendly_name: amble-home
@@ -57,8 +57,8 @@ web_server_base:
 esp32_ble:
   enable_on_boot: true
 
-# The addressable RGB LED most dev boards carry, left lit by the factory firmware
-# (issue #11). The pin is per chip (board_led); a board without an LED on that
+# The addressable RGB LED most dev boards carry, left lit by the factory firmware.
+# The pin is per chip (board_led); a board without an LED on that
 # pin drives nothing.
 light:
   - platform: esp32_rmt_led_strip

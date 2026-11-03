@@ -48,7 +48,7 @@ amble:
   dev_allowlist:
     - !secret spare_address
 
-# Memory and loop-time readings for the board matrix (#24); dev build only.
+# Memory and loop-time readings for the board matrix; dev build only.
 debug:
   update_interval: 5s
 

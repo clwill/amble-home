@@ -84,7 +84,7 @@ export function boxName(name) {
 // Two records with one MAC (a fixture re-provisioned and left twice), two MACs
 // sharing their last three bytes (one entity id, see fixture.h) or two fixtures on
 // one mesh address cannot both reach the box: it refuses the whole import and the
-// page would have no way to pick one (#34, #36).
+// page would have no way to pick one.
 // Same MAC, then same address among the MAC survivors: keep the newest by
 // `newness(f)` (ties: the later record), the record amaran itself treats as current.
 // Same id, different MACs: both are real fixtures, so the first record stays and the
@@ -200,6 +200,6 @@ export function toImportPayload(result, { selected } = {}) {
       cct_max: f.caps.cct_max,
     }));
   if (!fixtures.length) throw new ImportError("No fixtures selected.");
-  // The box's own mesh address is never part of the payload: it derives it from its MAC (#25).
+  // The box's own mesh address is never part of the payload: it derives it from its MAC.
   return { version: 1, net_key: result.keys.net_key, app_key: result.keys.app_key, fixtures };
 }

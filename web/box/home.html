@@ -8,8 +8,8 @@
 /* theme:start */
 /* amble-home visual system. One source: web/box/build.mjs copies this block into
    home.html, edit.html and web/flasher/index.html between the theme markers.
-   World: a studio control surface read in a dim room. Dark only, by decision
-   (#28): one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
+   World: a studio control surface read in a dim room. Dark only, by decision:
+   one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
    purpose: the box serves these pages offline over its own Wi-Fi, so there is no
    font to fetch, and the flasher keeps the same face so the two feel like one. */
 :root {
@@ -68,7 +68,7 @@ tr.dark td, tr.na td { color: var(--muted); }
 td.lamp-cell { width: 2.4rem; padding-right: 0; }
 td.summary { text-align: right; white-space: nowrap; }
 
-/* The lamp: a fixture rendered in its own colour. --c is the colour it is showing,
+/* The lamp: a fixture rendered in its own color. --c is the color it is showing,
    --g the glow strength. Off: an outline. Never heard: a dashed outline. */
 .lamp { display: inline-block; width: 1.35rem; height: 1.35rem; border-radius: .4rem; vertical-align: middle;
   background: var(--c, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--line)) 70%, var(--line));

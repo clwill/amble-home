@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Dev tool: drive the box's Edit page in a real (headless) Chrome the way a person
 // would. Opens a copy of amaran.db, checks that exactly the fixtures the box already
-// has are pre-ticked, presses Save, and watches the page until it lands on Home or
+// has are pre-checked, presses Save, and watches the page until it lands on Home or
 // gives up. Prints a timestamped transcript of the page's status line.
 //
 //   node tools/edit-page-flow.mjs http://amble-home.local /path/to/amaran.db [--script web/box/box.js]
@@ -42,10 +42,10 @@ try {
   await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
   const rows = await page.$$eval("#rows tr", (trs) => trs.map((tr) => ({ name: tr.children[1].textContent, checked: tr.querySelector("input").checked })));
   const ticked = rows.filter((r) => r.checked).map((r) => r.name);
-  console.log(ts(), `rows: ${rows.length}, pre-ticked: ${ticked.join(", ") || "(none)"}`);
+  console.log(ts(), `rows: ${rows.length}, pre-checked: ${ticked.join(", ") || "(none)"}`);
   console.log(ts(), `fixtures line: ${await page.$eval("#fixtures-msg", (e) => e.textContent)}`);  // names nothing: counts by reason only
   let last = "", landed = false;
-  if (ticked.length === 0) console.log("nothing pre-ticked: this box has no fixtures yet; tick on the real page instead");
+  if (ticked.length === 0) console.log("nothing pre-checked: this box has no fixtures yet; check on the real page instead");
   else await page.click("#save");
   for (let i = 0; ticked.length > 0 && i < 150; i++) {
     await new Promise((r) => setTimeout(r, 1000));

@@ -322,7 +322,7 @@ test("duplicate mesh ids are refused before any choice or extraction", () => {
   assert.throws(() => toExtracted(d, "m1", caps), shape);
 });
 
-// #34: the account door applies the same de-duplication as the database door.
+// The account door applies the same de-duplication as the database door.
 test("toExtracted keeps the newest of two records sharing a MAC and skips the other as duplicate MAC", () => {
   const older = { ...fx("m1", 3, "AA:BB:CC:00:00:01", "Old"), update_time: 5 };
   const newer = { ...fx("m1", 7, "AA:BB:CC:00:00:01", "New"), update_time: 9 };
@@ -339,7 +339,7 @@ test("toExtracted skips the second of two different MACs that would share an ent
   assert.deepEqual(r.skipped, [{ name: "Clash", reason: "id clash" }]);
 });
 
-// #36: the account door settles two fixtures on one mesh address the same way.
+// The account door settles two fixtures on one mesh address the same way.
 test("toExtracted keeps the newest of two records sharing a mesh address and skips the other as duplicate address", () => {
   const older = { ...fx("m1", 3, "AA:BB:CC:00:00:01", "Old"), update_time: 5 };
   const newer = { ...fx("m1", 3, "AA:BB:CC:00:00:02", "New"), update_time: 9 };

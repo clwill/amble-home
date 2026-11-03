@@ -10,7 +10,7 @@ namespace esphome {
 namespace amble {
 
 // Wire ↔ HA conversions (spec "Light semantics": 0–1000 on the wire, Kelvin
-// within the fixture's range, HSI when colour is set).
+// within the fixture's range, HSI when color is set).
 uint16_t wire_intensity_from_brightness(float b_0_1);
 float brightness_from_wire(uint16_t i_0_1000);
 uint16_t kelvin_from_mireds(float mireds);

@@ -61,7 +61,7 @@ ParseError parse_import_payload(const char *json, size_t len, Config *out) {
     return ParseError::BAD_KEY;
 
   if (!root["own_address"].isNull())
-    return ParseError::BAD_ADDRESS;  // the box derives its own address (#25); never imported
+    return ParseError::BAD_ADDRESS;  // the box derives its own address; never imported
 
   JsonArray fixtures = root["fixtures"].as<JsonArray>();
   if (fixtures.isNull() || fixtures.size() == 0)
@@ -92,7 +92,7 @@ ParseError parse_import_payload(const char *json, size_t len, Config *out) {
       snprintf(fx.name, NAME_LEN, "Light %04X", fx.address);
     } else {
       // Cut on a character boundary: a UTF-8 continuation byte (10xxxxxx) at the cut
-      // means the cut landed inside a character, so back up to its first byte (#33).
+      // means the cut landed inside a character, so back up to its first byte.
       size_t n = strnlen(name, NAME_LEN);
       if (n > NAME_LEN - 1) {
         n = NAME_LEN - 1;

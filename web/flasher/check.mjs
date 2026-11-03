@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Validates a rendered flasher manifest: node web/flasher/check.mjs <manifest.json> [--firmware-dir <dir>]
 // Exits non-zero on any mismatch, so CI never publishes a manifest that points nowhere.
-// The manifest carries one build per chip family the flasher offers (#24): ESP32-S3
+// The manifest carries one build per chip family the flasher offers: ESP32-S3
 // and ESP32-C6, each a single factory image at offset 0 next to the manifest. ESP Web
 // Tools picks the build from the chip it finds on the port.
 import { readFileSync, statSync } from "node:fs";

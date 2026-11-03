@@ -1,5 +1,5 @@
 # Spike 2: mesh hello and coexistence, on the dev board against the spare P60c.
-# Throwaway. See spikes/02-mesh/README.md and issue #5.
+# Throwaway. See spikes/02-mesh/README.md.
 #
 # transmit: false  = receive-only (phase A: prove the userland snoop on live traffic)
 # transmit: true   = unicast commands to the one bench fixture (phase B)

@@ -1,7 +1,7 @@
 import { resolveCaps, MAC_RE, HEX32, boxName, dedupe } from "./importer.js";
 
 // amble-home cloud door: sign in to amaran's cloud through the box, fetch the mesh from the browser
-// and map it to the same object the database importer returns. Nothing is stored by the page; the box keeps the sign-in only when the person ticks Remember. Nothing is logged: no
+// and map it to the same object the database importer returns. Nothing is stored by the page; the box keeps the sign-in only when the person checks Remember. Nothing is logged: no
 // console output of credentials, tokens or server bodies, and userMessage never
 // echoes the server's own text (it can be in Chinese and is not ours to show).
 
@@ -233,7 +233,7 @@ export function meshChoices(pack) {
     out.push({
       uuid: id,
       index: i + 1,
-      // Counted the way toExtracted keeps them: duplicate MACs, duplicate addresses and id clashes once (#34, #36).
+      // Counted the way toExtracted keeps them: duplicate MACs, duplicate addresses and id clashes once.
       fixtures: dedupe(
         pack.fixtures.existing
           .filter((f) => meshId(f) === id && parseInt(String(f.node_address), 10) >= 2 && normaliseMac(f.mac_address) !== null)

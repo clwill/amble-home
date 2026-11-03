@@ -37,7 +37,7 @@ void AmbleComponent::setup() {
   this->load_pin_();
   if (this->has_config_) {
     // The box's own mesh address is never imported: it comes from this box's
-    // address seed and the table it runs (#25). The persisted value is
+    // address seed and the table it runs. The persisted value is
     // overwritten here, so a configuration saved under an older scheme migrates
     // on its next boot. Without a seed there is no identity and the mesh stays
     // down (own_address 0: MeshNode::start refuses it).
@@ -144,7 +144,7 @@ void AmbleComponent::create_entities_() {
 void AmbleComponent::create_diagnostics_() {
   // Counters carry a unit ("msg") and a total-increasing state class so Home
   // Assistant graphs them and keeps them out of the logbook; a unit-less number
-  // is logged on every change, which drowned the logbook in mesh ticks (#22).
+  // is logged on every change, which drowned the logbook in mesh ticks.
   // The IV index is the one value whose change deserves a logbook line: no unit.
   auto mk = [&](const char *name, const char *suffix, bool counter) {
     auto *s = new sensor::Sensor();  // NOLINT

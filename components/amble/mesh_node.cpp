@@ -154,7 +154,7 @@ bool MeshNode::self_provision_(const Config &cfg) {
     // The stack restored a node from NVS. It is only reused if it is THIS
     // configuration's node: same address and NetKey. Otherwise its safety state
     // is recorded, the stored identity discarded, and the node provisions afresh
-    // below (#25). Running on the wrong identity would desynchronise the fixture
+    // below. Running on the wrong identity would desynchronise the fixture
     // table from the mesh in use.
     struct bt_mesh_subnet *sub = bt_mesh_rx_netkey_size() ? bt_mesh_rx_netkey_get(0) : nullptr;
     bool same_addr = bt_mesh_primary_addr() == cfg.own_address;

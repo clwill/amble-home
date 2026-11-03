@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Spike 4 (#8): one login and one full sync query against the amaran cloud, printing SHAPES only.
+"""Spike 4: one login and one full sync query against the amaran cloud, printing SHAPES only.
 Run: python3 spikes/04-cloud/cloud-replay.py (asks for the amaran account password; nothing is stored; shapes go to shapes.jsonl beside it)."""
 import getpass, json, ssl, sys, urllib.request, uuid
 import re

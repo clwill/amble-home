@@ -1,6 +1,6 @@
 # Spike 1, BAD-OTA variant: identical build that aborts in setup(). Flashed over OTA
 # to see whether the bootloader rolls back to the good image. See README.md.
-# Throwaway. Nothing here is product code. See spikes/01-fit/README.md and issue #4.
+# Throwaway. Nothing here is product code. See spikes/01-fit/README.md.
 #
 # Realistic product-shaped component set so the size numbers mean something:
 # Wi-Fi + captive portal + Improv + native API + OTA + web server + logger + BLE.

@@ -1,4 +1,4 @@
-"""mitmdump addon for Spike 4 (#8): record the SHAPE of the amaran cloud traffic, never its secrets.
+"""mitmdump addon for Spike 4: record the SHAPE of the amaran cloud traffic, never its secrets.
 Writes one JSON line per flow to CAPTURE_OUT. Every string value is replaced by a type+length marker;
 header values are kept only for a short allowlist (content-type, content-length, status). Numbers and
 booleans pass through, except keys that look secret, which are redacted whatever their type.

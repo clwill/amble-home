@@ -126,7 +126,7 @@ TEST(parse_rejects_mac_suffix_collision) {
   CHECK_EQ((int) parse(with(R"([{"mac":"AA:BB:CC:DD:EE:01","address":30},{"mac":"11:22:33:DD:EE:01","address":31}])"), &c), (int) ParseError::DUPLICATE_ID);
 }
 
-// #33: a name over 31 bytes is cut on a character boundary, never inside a UTF-8 sequence.
+// A name over 31 bytes is cut on a character boundary, never inside a UTF-8 sequence.
 static std::string payload_with_name(const std::string &name) {
   return with((R"([{"mac":"AA:BB:CC:DD:EE:FF","address":30,"name":")" + name + R"("}])").c_str());
 }

@@ -107,7 +107,7 @@ test("boxName truncates to 31 UTF-8 bytes on a codepoint boundary", () => {
   assert.ok(bytes(boxName("😀".repeat(9))) <= 31);
 });
 
-// #34: two records with one MAC, or two MACs with one id (last three bytes), cannot both go to the box.
+// Two records with one MAC, or two MACs with one id (last three bytes), cannot both go to the box.
 const F1_AGAIN = ["AA:BB:CC:00:00:01", "40015", "deadbeefdeadbeefdeadbeefdeadbeef", "1.0", "Light A again", 31];
 const F1_CLASH = ["11:22:33:00:00:01", "40025", "cafebabecafebabecafebabecafebabe", "1.2", "Clash", 40];
 
@@ -136,7 +136,7 @@ test("extract: newest by update_time wins even when it comes first in address or
   assert.deepEqual(r.skipped, [{ name: "Light A again", reason: "duplicate MAC" }]);
 });
 
-// #36: two different fixtures with one mesh address cannot both go to the box either.
+// Two different fixtures with one mesh address cannot both go to the box either.
 const F1_SAME_ADDR = ["AA:BB:CC:00:00:07", "40015", "deadbeefdeadbeefdeadbeefdeadbeef", "1.0", "Light A moved", 30];
 
 test("extract keeps the newest of two records sharing a mesh address and skips the other as duplicate address", async () => {

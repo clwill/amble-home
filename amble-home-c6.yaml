@@ -1,5 +1,5 @@
 # amble-home RELEASE configuration for the ESP32-C6: the twin of amble-home.yaml
-# for the other chip family the flasher page offers (#24). Everything shared is
+# for the other chip family the flasher page offers. Everything shared is
 # in amble-home.common.yaml; the same release guard applies.
 
 substitutions:

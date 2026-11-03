@@ -1,5 +1,5 @@
 # Spike 1: does the amaran mesh stack fit and build under ESPHome esp-idf on the S3?
-# Throwaway. Nothing here is product code. See spikes/01-fit/README.md and issue #4.
+# Throwaway. Nothing here is product code. See spikes/01-fit/README.md.
 #
 # Realistic product-shaped component set so the size numbers mean something:
 # Wi-Fi + captive portal + Improv + native API + OTA + web server + logger + BLE.

@@ -4,7 +4,7 @@
 //   node tools/import-post.mjs <amaran.db> <host> [--select MAC[,MAC...]] [--pin 1234] [--rename MAC=name]
 // Prints only HTTP statuses, the import state and the fixture count. Keys, MACs
 // and names never print. --pin sends the box's Edit PIN; --rename changes one
-// fixture's name in the payload (bench tool for the rename-stability check, #14).
+// fixture's name in the payload (bench tool for the rename-stability check).
 import fs from "node:fs";
 import initSqlJs from "../web/importer/node_modules/sql.js/dist/sql-wasm.js";
 import { extract, toImportPayload, ImportError } from "../web/importer/importer.js";

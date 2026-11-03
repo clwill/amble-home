@@ -84,7 +84,7 @@ export function skippedLine(skipped) {
   return `${n} ${n === 1 ? "record" : "records"} skipped: ${[...by].map(([r, c]) => `${r} ×${c}`).join(", ")}.`;
 }
 
-// One Edit-table row. Every value is escaped; an invalid row cannot be ticked or flashed.
+// One Edit-table row. Every value is escaped; an invalid row cannot be checked or flashed.
 export function rowHtml(r, i) {
   const dis = r.invalid ? "disabled" : "";
   const dot = r.configured ? `<span class="lamp live-dot ${r.live ? "" : "off"}" style="--c:var(--live);--g:1" aria-label="${r.live ? "answering" : "configured, silent"}"></span>` : "";
@@ -143,7 +143,7 @@ export function selectedPayload(result, rows, toImportPayload) {
   return toImportPayload(result, { selected });
 }
 
-// The colour a fixture is showing, as CSS, for the lamp swatch on the Home page.
+// The color a fixture is showing, as CSS, for the lamp swatch on the Home page.
 // CCT is mapped through a small white-point curve (2000 K amber to 10000 K blue
 // white); HSI through hsl(). Brightness sets the glow, not the hue, so a dim red
 // still reads as red. Returns null when the fixture is off or never heard.
@@ -182,8 +182,8 @@ export function renderStatus(status) {
     return { id: f.id, name: f.name, state, summary, swatch: swatchFor(f) };
   });
 }
-// The lamp cell for a Home-page line: colour as a CSS custom property (a number
-// and a CSS colour we built ourselves; never user text), state as a class.
+// The lamp cell for a Home-page line: color as a CSS custom property (a number
+// and a CSS color we built ourselves; never user text), state as a class.
 export function lampHtml(line) {
   if (line.state === "na") return `<span class="lamp na" aria-label="never heard"></span>`;
   if (!line.swatch) return `<span class="lamp off" aria-label="off"></span>`;
@@ -191,7 +191,7 @@ export function lampHtml(line) {
 }
 
 // The Home page's one-line mesh summary. The box's own node address is shown so
-// two boxes can be told apart on the mesh as well as by name (#25).
+// two boxes can be told apart on the mesh as well as by name.
 export function meshLine(s) {
   if (!s?.mesh?.up) return s?.mesh?.error ? "mesh down: " + s.mesh.error : "mesh starting";
   return s.mesh.own ? `mesh up · this box is node ${hex4(s.mesh.own)}` : "mesh up";
@@ -299,7 +299,7 @@ if (typeof document !== "undefined") {
           db = new SQL.Database(new Uint8Array(await file.arrayBuffer()));
           const res = extract(db, caps, { withKeys: true });
           if (my !== gen) return;
-          load(res, `${res.fixtures.length} fixture(s) in the database. Tick the ones this box should control, then Save.`, "database");
+          load(res, `${res.fixtures.length} fixture(s) in the database. Check the ones this box should control, then Save.`, "database");
         } catch (e) {
           if (my !== gen) return;
           fixturesLine(e?.name === "ImportError" || e?.constructor?.name === "ImportError" ? e.message : "Could not open this file as an amaran database.");
@@ -389,7 +389,7 @@ if (typeof document !== "undefined") {
             if (all.length <= 1 && !choices.length) throw noneUsable;
             const pick = (c) => {
               const res = cloud.toExtracted(pack, c.uuid, caps), n = res.fixtures.length;
-              load(res, `Fetched ${n} fixture(s) from your amaran account. Tick the ones this box should control, then Save.`, "account");
+              load(res, `Fetched ${n} fixture(s) from your amaran account. Check the ones this box should control, then Save.`, "account");
               $("acct-pick").innerHTML = ""; $("acct-pick").onclick = null;  // drop the closure that holds the pack
               $("acct-msg").textContent = `Signed in${keptNote}`;
               $("acct-email").value = "";
