@@ -10,7 +10,16 @@
 # the captive portal. Fixtures are not in this file either: import them on the
 # box's Edit page from the amaran app's database or your amaran account.
 
+# The release version, shown by Home Assistant on the device page as
+# "amble-home <version>". CI passes the tag's version (-s amble_version 1.0.0);
+# a local build without it says 0.0.0.
+substitutions:
+  amble_version: "0.0.0"
+
 esphome:
+  project:
+    name: clwill.amble-home
+    version: ${amble_version}
   # Every box is amble-home-xxxxxx (its MAC's last six hex digits), on the network
   # and in Home Assistant, so two boxes never share a name. The bare
   # amble-home.local still answers (amble: mdns_alias) for homes with one box.

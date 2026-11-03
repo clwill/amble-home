@@ -59,10 +59,15 @@ jobs:
           sed -e 's/release: true/release: false/' -e 's/amble_allow_group: "false"/amble_allow_group: "true"/' amble-home.yaml > amble-home.bad.yaml
           if esphome config amble-home.bad.yaml > /dev/null 2>&1; then echo "allow_group without release must be refused"; exit 1; fi
           rm amble-home.bad.yaml
+      - name: Set the version (the tag's, or 0.0.0+sha for a branch build)
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.0+${GITHUB_SHA::7}"; fi
+          echo "AMBLE_VERSION=${VERSION}" >> "${GITHUB_ENV}"
+          echo "version ${VERSION}"
       - name: Compile the ESP32-S3 release firmware
-        run: esphome compile amble-home.yaml
+        run: esphome -s amble_version "${AMBLE_VERSION}" compile amble-home.yaml
       - name: Compile the ESP32-C6 release firmware
-        run: esphome compile amble-home-c6.yaml
+        run: esphome -s amble_version "${AMBLE_VERSION}" compile amble-home-c6.yaml
 
       - name: Collect images and render the manifest
         run: |
@@ -71,8 +76,7 @@ jobs:
           cp .esphome/build/amble-home-s3/build/firmware.ota.bin dist/amble-home-esp32s3.ota.bin
           cp .esphome/build/amble-home-c6/build/firmware.factory.bin dist/amble-home-esp32c6.factory.bin
           cp .esphome/build/amble-home-c6/build/firmware.ota.bin dist/amble-home-esp32c6.ota.bin
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.0+${GITHUB_SHA::7}"; fi
-          sed "s/__VERSION__/${VERSION}/" web/flasher/manifest.template.json > dist/manifest.json
+          sed "s/__VERSION__/${AMBLE_VERSION}/" web/flasher/manifest.template.json > dist/manifest.json
           cp web/flasher/index.html dist/index.html
           node web/flasher/check.mjs dist/manifest.json --firmware-dir dist
           ls -la dist

@@ -4,6 +4,12 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
+## Unreleased
+
+- **The device page names the release.** `esphome: project:` carries `clwill.amble-home` and the tag's version (CI passes it as the `amble_version` substitution; a local build says 0.0.0), so Home Assistant shows "amble-home 1.0.1" beside the ESPHome version instead of a compile date.
+- **Flasher page copy.** "Check" the erase box, and the hosted update feed is planned rather than promised.
+- **Known bug, #10.** One light can stay unavailable in Home Assistant after the box reconnects; the wiki's Troubleshooting page carries the reload workaround.
+
 ## 1.0.0 (2026-11-03) — first public release
 
 - **What it is.** An ESPHome firmware that puts amaran (Aputure) Bluetooth-mesh lights into Home Assistant: flash from the browser, join Wi-Fi from the same page, import your fixtures from your amaran account or the desktop app's database, and the lights appear as Home Assistant lights with on/off, brightness, color temperature, color and green/magenta, their state read back every 15 seconds.
