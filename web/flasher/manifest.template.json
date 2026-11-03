@@ -6,11 +6,23 @@
   "builds": [
     {
       "chipFamily": "ESP32-S3",
-      "parts": [{ "path": "amble-home-esp32s3.factory.bin", "offset": 0 }]
+      "parts": [{ "path": "amble-home-esp32s3.factory.bin", "offset": 0 }],
+      "ota": {
+        "path": "amble-home-esp32s3.ota.bin",
+        "md5": "__MD5_S3__",
+        "summary": "amble-home __VERSION__",
+        "release_url": "https://github.com/clwill/amble-home/releases/tag/v__VERSION__"
+      }
     },
     {
       "chipFamily": "ESP32-C6",
-      "parts": [{ "path": "amble-home-esp32c6.factory.bin", "offset": 0 }]
+      "parts": [{ "path": "amble-home-esp32c6.factory.bin", "offset": 0 }],
+      "ota": {
+        "path": "amble-home-esp32c6.ota.bin",
+        "md5": "__MD5_C6__",
+        "summary": "amble-home __VERSION__",
+        "release_url": "https://github.com/clwill/amble-home/releases/tag/v__VERSION__"
+      }
     }
   ]
 }

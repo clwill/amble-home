@@ -3,8 +3,11 @@
 // Exits non-zero on any mismatch, so CI never publishes a manifest that points nowhere.
 // The manifest carries one build per chip family the flasher offers: ESP32-S3
 // and ESP32-C6, each a single factory image at offset 0 next to the manifest. ESP Web
-// Tools picks the build from the chip it finds on the port.
+// Tools picks the build from the chip it finds on the port. Each build also carries
+// an `ota` block (the OTA image next to the manifest and its MD5) for the box's
+// update feed: ESPHome's http_request update platform reads this same file.
 import { readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 
 export const CHIP_FAMILIES = ["ESP32-S3", "ESP32-C6"];
@@ -36,6 +39,19 @@ export function problems(m, dir = null) {
         if (size < MIN_IMAGE_BYTES) errors.push(`${fam}: firmware ${p.path} is only ${size} bytes`);
       } catch { errors.push(`${fam}: firmware ${p.path} not found in ${dir}`); }
     }
+    const o = b.ota;
+    if (!o || typeof o !== "object") { errors.push(`${fam}: no ota block`); continue; }
+    const otaPathOk = typeof o.path === "string" && o.path.endsWith(".ota.bin") && !o.path.includes("/");
+    if (!otaPathOk) errors.push(`${fam}: ota path must be a bare *.ota.bin next to the manifest`);
+    if (typeof o.md5 !== "string" || o.md5.includes("__")) errors.push(`${fam}: md5 not rendered`);
+    else if (!/^[0-9a-f]{32}$/.test(o.md5)) errors.push(`${fam}: md5 must be 32 lowercase hex digits`);
+    else if (dir && otaPathOk) {
+      try {
+        const sum = createHash("md5").update(readFileSync(join(dir, o.path))).digest("hex");
+        if (sum !== o.md5) errors.push(`${fam}: md5 does not match ${o.path}`);
+      } catch { errors.push(`${fam}: firmware ${o.path} not found in ${dir}`); }
+    }
+    for (const k of ["summary", "release_url"]) if (typeof o[k] === "string" && o[k].includes("__")) errors.push(`${fam}: ota ${k} not rendered`);
   }
   if (new Set(paths).size !== paths.length) errors.push("two builds point at the same image");
   return errors;

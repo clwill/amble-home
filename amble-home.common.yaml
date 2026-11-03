@@ -15,6 +15,10 @@
 # a local build without it says 0.0.0.
 substitutions:
   amble_version: "0.0.0"
+  # Where the box looks for a newer release: the hosted flasher's manifest, which
+  # also names each chip's OTA image and checksum. The bench points a build at a
+  # test manifest with -s amble_update_source <url>.
+  amble_update_source: "https://clwill.github.io/amble-home/manifest.json"
 
 esphome:
   project:
@@ -45,8 +49,23 @@ api:
 
 ota:
   - platform: esphome
+  - platform: http_request  # the update feed's install path
 
 safe_mode:
+
+# The update feed. The box fetches the hosted manifest once after boot and every
+# hour after that, over HTTPS, and compares its version with its own
+# (esphome: project: version). A newer one shows as an Update entity on the box's
+# device page in Home Assistant with an Install button; pressing it makes the box
+# download that chip's OTA image, check its MD5 and reboot into it. The box never
+# installs on its own, and a manifest it cannot fetch means no update offered.
+http_request:
+
+update:
+  - platform: http_request
+    name: Firmware
+    source: ${amble_update_source}
+    update_interval: 1h
 
 wifi:
   ap: {}  # the setup network is named after the box (amble-home-xxxxxx)

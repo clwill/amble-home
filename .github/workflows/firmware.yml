@@ -76,7 +76,9 @@ jobs:
           cp .esphome/build/amble-home-s3/build/firmware.ota.bin dist/amble-home-esp32s3.ota.bin
           cp .esphome/build/amble-home-c6/build/firmware.factory.bin dist/amble-home-esp32c6.factory.bin
           cp .esphome/build/amble-home-c6/build/firmware.ota.bin dist/amble-home-esp32c6.ota.bin
-          sed "s/__VERSION__/${AMBLE_VERSION}/" web/flasher/manifest.template.json > dist/manifest.json
+          MD5_S3=$(md5sum dist/amble-home-esp32s3.ota.bin | cut -c1-32)
+          MD5_C6=$(md5sum dist/amble-home-esp32c6.ota.bin | cut -c1-32)
+          sed -e "s/__VERSION__/${AMBLE_VERSION}/g" -e "s/__MD5_S3__/${MD5_S3}/" -e "s/__MD5_C6__/${MD5_C6}/" web/flasher/manifest.template.json > dist/manifest.json
           cp web/flasher/index.html dist/index.html
           node web/flasher/check.mjs dist/manifest.json --firmware-dir dist
           ls -la dist
