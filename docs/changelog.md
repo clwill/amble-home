@@ -4,7 +4,13 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
-## Before 1.0.0 — how v1 was built (2026-10-24 to 2026-11-02)
+## 1.0.0 (2026-11-03) — first public release
+
+- **What it is.** An ESPHome firmware that puts amaran (Aputure) Bluetooth-mesh lights into Home Assistant: flash from the browser, join Wi-Fi from the same page, import your fixtures from your amaran account or the desktop app's database, and the lights appear as Home Assistant lights with on/off, brightness, color temperature, color and green/magenta, their state read back every 15 seconds.
+- **Boards.** One image for every ESP32-S3 board with 8 MB of flash or more and one for the ESP32-C6; the flasher page picks by chip. Five boards have run the whole path (the wiki's Boards page).
+- **The hosted flasher.** A tag builds the images, creates the GitHub Release and publishes the flasher page, the manifest and the images to GitHub Pages, so the page always offers the latest release.
+- **The record.** The wiki carries the user-facing pages; `docs/` carries the design, the decisions and the fixture matrix; the private development history is summarized below.
+ — how v1 was built (2026-10-24 to 2026-11-02)
 
 amble-home was designed, built and put into production in ten days, in a private repository that remains the author's development record. What follows is the shape of that work; the public history starts at 1.0.0.
 
