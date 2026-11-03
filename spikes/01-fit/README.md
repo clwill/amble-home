@@ -21,7 +21,7 @@ Needs a gitignored `secrets.yaml` with two YAML lines, `wifi_ssid: "…"` and
 works. The project `.venv` must exist (`docs/bench.md`). The bad-OTA variant has its own `build_path`; see `docs/bench.md`
 for why, and for the first-flash and USB-logging procedure on the Mac.
 
-**Result (2026-10-25):** 1.28 MB image, 7.94 MB per OTA slot, mesh stack initialises
+**Result (2026-10-25):** 1.28 MB image, 7.94 MB per OTA slot, mesh stack initialiszes
 on the bench board, and the bad image pushed over OTA was rolled back by the
 bootloader without intervention. Full write-up in `docs/changelog.md`.
 
@@ -40,7 +40,7 @@ ESPHome 2026.10 builds esp-idf natively (CMake + ninja, IDF under
   `crash_on_boot: true`; its own `build_path`.
 - `components/amble_spike/` — pulls in the bridge's mesh `sdkconfig` (plus
   `CONFIG_BT_GATTS_ENABLE`, which the mesh GATT bearers need and esp32_ble does
-  not set), initialises the mesh stack after `esp32_ble` has Bluedroid up,
+  not set), initialiszes the mesh stack after `esp32_ble` has Bluedroid up,
   references the key-injection symbols so the linker keeps them, and wraps
   `bt_mesh_generic_net_recv` with `-Wl,--wrap` as the candidate no-patch snoop
   point. **Never transmits**: no provisioning bearers enabled, no keys injected.

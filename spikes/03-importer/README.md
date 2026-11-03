@@ -25,7 +25,7 @@ Edit page's database door ports.
   hook so a headless browser can drive it.
 - `fixture-caps.json` — the capability fields amble-home needs, derived from
   the amaran Desktop app's `fixture_config.json` (97 fixture entries, 80 model
-  codes): colour, green/magenta, CCT range, per hardware version.
+  codes): color, green/magenta, CCT range, per hardware version.
 - `test.mjs` — Node harness (`npm install && npm test`) that runs the same logic
   against `./amaran.db` and prints **fixed diagnostics only**: counts, key
   presence, capability-source tallies and structural checks, then PASS/FAIL.

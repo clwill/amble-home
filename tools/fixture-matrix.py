@@ -46,11 +46,11 @@ def family(c):
         return "unknown"
     pix = int(c.get("pixel_num") or 0)
     if flag(c.get("hsi_support")) or flag(c.get("rgb_support")):
-        return "pixel colour" if pix > 1 else "colour (HSI)"
+        return "pixel color" if pix > 1 else "color (HSI)"
     if flag(c.get("cct_support")):
         lo, hi = kelvin(c.get("product_cct_min")), kelvin(c.get("product_cct_max"))
-        return "bi-colour (CCT)" if lo != hi else "single colour"
-    return "single colour"
+        return "bi-color (CCT)" if lo != hi else "single color"
+    return "single color"
 
 
 def mapped(c):
@@ -61,7 +61,7 @@ def mapped(c):
         lo, hi = kelvin(c.get("product_cct_min")), kelvin(c.get("product_cct_max"))
         out.append(f"CCT {lo}–{hi} K" if lo and hi and lo != hi else "CCT (fixed)")
     if flag(c.get("hsi_support")):
-        out.append("HSI colour")
+        out.append("HSI color")
     if flag(c.get("gm_support")):
         out.append("green/magenta")
     return ", ".join(out)
@@ -76,7 +76,7 @@ def not_mapped(c):
     if int(c.get("pixel_num") or 0) > 1 or flag(c.get("partition_support")):
         skipped.append("per-pixel/partition control")
     if flag(c.get("xy_support")):
-        skipped.append("xy colour")
+        skipped.append("xy color")
     if flag(c.get("gel_support")) or flag(c.get("adv_gel_support")):
         skipped.append("gels")
     if flag(c.get("motion_support")):
@@ -127,7 +127,7 @@ def main():
         "",
         f"Generated {today} by `tools/fixture-matrix.py` from the amaran Desktop app's own tables (`product.json`, `fixture_config.json`, app bundle v1.1.03). Regenerate after an app update or a new test; edit the `TESTED` table in the script, never this file.",
         "",
-        "**How to read it.** amble-home speaks the mesh's generic light commands (on/off, brightness, colour temperature, HSI colour, green/magenta, status). Any fixture that the app table says supports one of those should work the same way the tested ones do: the protocol does not change per model, only the capability flags. Effects, per-pixel control, gels and motion are app features and are not mapped (standing rule 3: the amaran app stays the source of truth for the mesh; HA scenes cover the rest).",
+        "**How to read it.** amble-home speaks the mesh's generic light commands (on/off, brightness, color temperature, HSI color, green/magenta, status). Any fixture that the app table says supports one of those should work the same way the tested ones do: the protocol does not change per model, only the capability flags. Effects, per-pixel control, gels and motion are app features and are not mapped (standing rule 3: the amaran app stays the source of truth for the mesh; HA scenes cover the rest).",
         "",
         "| Status | Meaning |",
         "|---|---|",
@@ -148,10 +148,10 @@ def main():
         "",
         "## Families, for buying one of each",
         "",
-        "- **colour (HSI)**: full colour plus CCT; the P60c is this family and is tested.",
-        "- **bi-colour (CCT)**: warm-to-cool white only, some with green/magenta; the studio keys are this family.",
-        "- **pixel colour**: tubes and bars with many pixels; amble-home drives them as one colour (no per-pixel control). One tested unit would settle whether a whole-tube colour behaves like a panel.",
-        "- **single colour**: daylight-only COBs; on/off and brightness only.",
+        "- **color (HSI)**: full color plus CCT; the P60c is this family and is tested.",
+        "- **bi-color (CCT)**: warm-to-cool white only, some with green/magenta; the studio keys are this family.",
+        "- **pixel color**: tubes and bars with many pixels; amble-home drives them as one color (no per-pixel control). One tested unit would settle whether a whole-tube color behaves like a panel.",
+        "- **single color**: daylight-only COBs; on/off and brightness only.",
         "",
         "## Facts carried from the studio bridge (`docs/origin.md`)",
         "",
