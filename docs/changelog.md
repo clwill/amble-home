@@ -4,7 +4,7 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
-## Unreleased
+## 1.0.1 (2026-11-03)
 
 - **The device page names the release.** `esphome: project:` carries `clwill.amble-home` and the tag's version (CI passes it as the `amble_version` substitution; a local build says 0.0.0), so Home Assistant shows "amble-home 1.0.1" beside the ESPHome version instead of a compile date.
 - **Flasher page copy.** "Check" the erase box, and the hosted update feed is planned rather than promised.
