@@ -4,7 +4,7 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
-## Unreleased
+## 1.1.0 (2026-11-03)
 
 - **Home Assistant offers updates.** The box fetches the flasher page's manifest after boot and hourly; a newer release shows as an **Update** row on the box's device page with an Install button, and pressing it downloads that chip's OTA image from GitHub Pages over HTTPS, checks its MD5 and reboots into it (`amble-home.update.yaml`, included by the release configs only; the bench config leaves it out so an Install can never replace a dev build). The manifest carries an `ota` block per chip, rendered by CI; `check.mjs` refuses a manifest whose checksums do not match the images beside it. Proved on the dev board: a 0.0.0 build offered 1.0.1 in HA, installed it from the hosted image in under a minute, and came back with its Wi-Fi and fixture. Boxes on 1.0.x need one more update by hand to get the feed.
 
