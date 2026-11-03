@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>amble-home importer spike</title>
+<!-- Spike 3 (throwaway). Opens amaran.db in the browser with sql.js, lists the
+     fixtures and reports key PRESENCE. Nothing leaves the page: no network calls
+     after the two CDN loads, no key values rendered. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.15.0/sql-wasm.js"></script>
+<style>
+  :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+  body { max-width: 56rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.4; }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .35rem .6rem; border-bottom: 1px solid #8884; }
+  code { font-family: ui-monospace, Menlo, monospace; }
+  .ok { color: #2a7; } .bad { color: #c33; } .muted { opacity: .7; }
+  #status { margin-top: 1rem; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>amble-home importer — spike 3</h1>
+<p>Pick your <code>amaran.db</code>. It is read <strong>in this browser</strong>; the file is not uploaded anywhere and key values are never displayed.</p>
+<input type="file" id="file" accept=".db,.sqlite,application/octet-stream">
+<div id="status" class="muted">Loading sql.js…</div>
+<div id="out"></div>
+
+<script type="module">
+import { extract, hex4, ImportError } from "../../web/importer/importer.js";
+
+const status = document.getElementById("status");
+const out = document.getElementById("out");
+const caps = await (await fetch("../../web/importer/fixture-caps.json")).json();
+const SQL = await initSqlJs({ locateFile: (f) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.15.0/${f}` });
+status.textContent = "Ready. Choose a database file.";
+
+// Spike-only test hook: ?db=<relative url> loads a database over HTTP instead of
+// the file picker, so a headless browser can exercise the page. Not for the product.
+const auto = new URLSearchParams(location.search).get("db");
+if (auto) {
+  const buf = await (await fetch(auto)).arrayBuffer();
+  render(new File([buf], auto));
+}
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const maskMac = (m) => m.replace(/^(..:..:..:)/, "••:••:••:");
+
+document.getElementById("file").addEventListener("change", (ev) => ev.target.files[0] && render(ev.target.files[0]));
+
+async function render(file) {
+  out.innerHTML = "";
+  status.textContent = `Reading ${file.name} (${file.size.toLocaleString()} bytes)…`;
+  let db;
+  try {
+    db = new SQL.Database(new Uint8Array(await file.arrayBuffer()));
+    const r = extract(db, caps);
+    const k = r.keys;
+    const flag = (b) => (b ? '<span class="ok">present</span>' : '<span class="bad">missing</span>');
+    let html = `<p>Schema <code>${esc(r.schema)}</code> · NetKey ${flag(k.net_key_present)} · AppKey ${flag(k.app_key_present)} · IV index column ${k.iv_index === null ? "absent (firmware learns it from the beacon)" : esc(k.iv_index)}</p>`;
+    html += `<table><thead><tr><th>Address</th><th>Name</th><th>Model</th><th>HW</th><th>Colour</th><th>G/M</th><th>CCT</th><th>MAC</th><th class="muted">Capability source</th></tr></thead><tbody>`;
+    for (const f of r.fixtures) {
+      const c = f.caps;
+      html += `<tr><td><code>${hex4(f.address)}</code></td><td>${esc(f.name)}</td><td><code>${esc(f.code)}</code></td><td>${esc(f.hwver || "?")}</td><td>${c.color ? "yes" : "—"}</td><td>${c.gm ? "yes" : "—"}</td><td>${c.cct_min}–${c.cct_max} K</td><td><code>${esc(maskMac(f.mac))}</code></td><td class="muted">${esc(c.source)}${c.src ? ": " + esc(c.src) : ""}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    if (r.skipped.length) html += `<p class="muted">Skipped: ${r.skipped.map((s) => esc(s.name) + " (" + esc(s.reason) + ")").join(", ")}</p>`;
+    html += `<p class="muted">Groups in the app: ${r.groups.map((g) => `<code>${hex4(g.address)}</code> ${esc(g.name)}`).join(", ") || "none"} — never addressed by amble-home.</p>`;
+    out.innerHTML = html;
+    status.textContent = `${r.fixtures.length} fixture(s) found.`;
+  } catch (e) {
+    // Only our own ImportError messages are shown; anything else (sql.js, file
+    // API) gets a fixed message so no database text can reach the page.
+    const msg = e instanceof ImportError ? e.message : "Could not open this file as an amaran database.";
+    status.innerHTML = `<span class="bad">${esc(msg)}</span>`;
+  } finally {
+    db?.close();
+  }
+}
+</script>
+</body>
+</html>

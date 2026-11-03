@@ -1,0 +1,98 @@
+name: Firmware
+
+# Builds the release firmware for both chip families the flasher page offers
+# (amble-home.yaml for the ESP32-S3, amble-home-c6.yaml for the ESP32-C6: no
+# credentials, release guard) from the repo alone, and publishes the flasher
+# manifest with the images. A tag v* also creates a GitHub Release carrying them.
+
+on:
+  push:
+    branches: [main]
+    paths: ['components/**', 'web/**', 'tests/**', 'amble-home*.yaml', 'secrets.yaml.example', '.github/workflows/firmware.yml']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ESPHOME_VERSION: "2026.10.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Page assets and their tests
+        run: |
+          cd web/importer && npm ci && node --test
+          cd ../box && npm test && node build.mjs
+          cd .. && node --test flasher/check.test.mjs
+      - name: Host tests for the component's pure logic (guard modes included)
+        run: |
+          bash tests/host/fetch-deps.sh
+          bash tests/host/run.sh
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Cache the ESP-IDF toolchains ESPHome installs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/esphome
+          key: esphome-idf-${{ env.ESPHOME_VERSION }}-${{ runner.os }}
+      - name: Install ESPHome
+        run: pip install "esphome==${ESPHOME_VERSION}"
+
+      - name: Validate the three configs, and refuse the dangerous combination
+        run: |
+          esphome config amble-home.yaml > /dev/null
+          esphome config amble-home-c6.yaml > /dev/null
+          cp secrets.yaml.example secrets.yaml && esphome config amble-home.dev.yaml > /dev/null && rm secrets.yaml
+          sed -e 's/release: true/release: false/' -e 's/amble_allow_group: "false"/amble_allow_group: "true"/' amble-home.yaml > amble-home.bad.yaml
+          if esphome config amble-home.bad.yaml > /dev/null 2>&1; then echo "allow_group without release must be refused"; exit 1; fi
+          rm amble-home.bad.yaml
+      - name: Compile the ESP32-S3 release firmware
+        run: esphome compile amble-home.yaml
+      - name: Compile the ESP32-C6 release firmware
+        run: esphome compile amble-home-c6.yaml
+
+      - name: Collect images and render the manifest
+        run: |
+          mkdir -p dist
+          cp .esphome/build/amble-home-s3/build/firmware.factory.bin dist/amble-home-esp32s3.factory.bin
+          cp .esphome/build/amble-home-s3/build/firmware.ota.bin dist/amble-home-esp32s3.ota.bin
+          cp .esphome/build/amble-home-c6/build/firmware.factory.bin dist/amble-home-esp32c6.factory.bin
+          cp .esphome/build/amble-home-c6/build/firmware.ota.bin dist/amble-home-esp32c6.ota.bin
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="0.0.0+${GITHUB_SHA::7}"; fi
+          sed "s/__VERSION__/${VERSION}/" web/flasher/manifest.template.json > dist/manifest.json
+          cp web/flasher/index.html dist/index.html
+          node web/flasher/check.mjs dist/manifest.json --firmware-dir dist
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amble-home-firmware
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: amble-home-firmware
+          path: dist
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/amble-home-esp32s3.factory.bin dist/amble-home-esp32s3.ota.bin dist/amble-home-esp32c6.factory.bin dist/amble-home-esp32c6.ota.bin dist/manifest.json --repo "${GITHUB_REPOSITORY}" --generate-notes

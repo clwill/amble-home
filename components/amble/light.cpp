@@ -1,0 +1,257 @@
+#include "light.h"
+
+#include <cmath>
+
+namespace esphome {
+namespace amble {
+
+uint16_t wire_intensity_from_brightness(float b) {
+  if (!(b > 0.0f))
+    return 0;
+  if (b >= 1.0f)
+    return 1000;
+  return (uint16_t) lroundf(b * 1000.0f);
+}
+float brightness_from_wire(uint16_t i) { return (i > 1000 ? 1000 : i) / 1000.0f; }
+uint16_t kelvin_from_mireds(float mireds) {
+  if (!(mireds > 0.0f))
+    return 6500;
+  return (uint16_t) lroundf(1000000.0f / mireds);
+}
+float mireds_from_kelvin(uint16_t kelvin) { return kelvin == 0 ? 153.0f : 1000000.0f / kelvin; }
+
+void hsi_from_rgb(float r, float g, float b, uint16_t *hue_deg, uint8_t *sat) {
+  float mx = fmaxf(r, fmaxf(g, b)), mn = fminf(r, fminf(g, b));
+  float d = mx - mn;
+  float h = 0.0f;
+  if (d > 1e-6f) {
+    if (mx == r)
+      h = fmodf((g - b) / d, 6.0f);
+    else if (mx == g)
+      h = (b - r) / d + 2.0f;
+    else
+      h = (r - g) / d + 4.0f;
+    h *= 60.0f;
+    if (h < 0)
+      h += 360.0f;
+  }
+  float s = mx > 1e-6f ? d / mx : 0.0f;
+  int hi = (int) lroundf(h);
+  if (hi >= 360)
+    hi -= 360;
+  *hue_deg = (uint16_t) hi;
+  *sat = (uint8_t) lroundf(s * 100.0f);
+}
+
+void rgb_from_hs(uint16_t hue_deg, uint8_t sat_0_100, float *r, float *g, float *b) {
+  float h = (hue_deg % 360) / 60.0f, s = sat_0_100 / 100.0f, v = 1.0f;
+  int i = (int) h;
+  float f = h - i, p = v * (1 - s), q = v * (1 - s * f), t = v * (1 - s * (1 - f));
+  switch (i) {
+    case 0: *r = v; *g = t; *b = p; break;
+    case 1: *r = q; *g = v; *b = p; break;
+    case 2: *r = p; *g = v; *b = t; break;
+    case 3: *r = p; *g = q; *b = v; break;
+    case 4: *r = t; *g = p; *b = v; break;
+    default: *r = v; *g = p; *b = q; break;
+  }
+}
+
+Look look_from_status(const telink::Status &st) {
+  Look l;
+  l.hsi = st.is_hs;
+  l.intensity = st.intensity > 1000 ? 1000 : st.intensity;
+  if (st.is_hs) {
+    l.hue = st.hue;
+    l.sat = st.sat;
+  } else {
+    l.kelvin = st.cct_kelvin;
+    l.gm = st.gm;
+  }
+  return l;
+}
+
+bool same_look(const Look &a, const Look &b) {
+  if (a.hsi != b.hsi || a.intensity != b.intensity)
+    return false;
+  return a.hsi ? (a.hue == b.hue && a.sat == b.sat) : (a.kelvin == b.kelvin && a.gm == b.gm);
+}
+
+SendPlan plan_sends(bool have_ref, const Look &ref, bool fixture_on, bool target_on, const Look &target) {
+  SendPlan p;
+  bool differs = have_ref && !same_look(ref, target);
+  if (target_on) {
+    p.power_on = !fixture_on;
+    p.look = differs;
+  } else {
+    p.look = differs;
+    p.power_off = true;
+  }
+  return p;
+}
+
+}  // namespace amble
+}  // namespace esphome
+
+#if defined(USE_ESP32) && !defined(AMBLE_HOST_TEST)
+#include "amble.h"
+#include "esphome/core/log.h"
+
+namespace esphome {
+namespace amble {
+
+static const char *const TAG = "amble.light";
+
+light::LightTraits AmbleLight::get_traits() {
+  const Fixture &f = this->parent_->fixture(this->index_);
+  light::LightTraits t;
+  if (f.caps.color)
+    t.set_supported_color_modes({light::ColorMode::COLOR_TEMPERATURE, light::ColorMode::RGB});
+  else
+    t.set_supported_color_modes({light::ColorMode::COLOR_TEMPERATURE});
+  t.set_min_mireds(mireds_from_kelvin(f.caps.cct_max));
+  t.set_max_mireds(mireds_from_kelvin(f.caps.cct_min));
+  return t;
+}
+
+Look AmbleLight::look_from_values_(const light::LightColorValues &v) const {
+  const Fixture &f = this->parent_->fixture(this->index_);
+  Look l;
+  l.intensity = wire_intensity_from_brightness(v.get_brightness());
+  if (v.get_color_mode() == light::ColorMode::RGB) {
+    l.hsi = true;
+    hsi_from_rgb(v.get_red(), v.get_green(), v.get_blue(), &l.hue, &l.sat);
+  } else {
+    uint16_t kelvin = kelvin_from_mireds(v.get_color_temperature());
+    if (kelvin < f.caps.cct_min)
+      kelvin = f.caps.cct_min;
+    if (kelvin > f.caps.cct_max)
+      kelvin = f.caps.cct_max;
+    l.kelvin = kelvin;
+    l.gm = this->gm_;
+  }
+  return l;
+}
+
+bool AmbleLight::realise(const light::LightColorValues &v) {
+  Look target = this->look_from_values_(v);
+  SendPlan plan = plan_sends(this->have_ref_, this->ref_, this->fixture_on_, v.is_on(), target);
+  uint8_t p[telink::PAYLOAD_LEN];
+  // The CCT/HSI commands set the look but do not power the fixture up (Spike 2),
+  // so power goes first on the way up and last on the way down. Only believe a
+  // power state or a look once its send was accepted.
+  if (plan.power_on) {
+    telink::onoff(true, p);
+    if (!this->parent_->send(this->index_, p))
+      return false;
+    this->fixture_on_ = true;
+  }
+  if (plan.look) {
+    if (target.hsi)
+      telink::hsi(target.hue, target.sat, target.intensity, p);
+    else
+      telink::cct(target.kelvin, target.intensity, target.gm, p);
+    if (!this->parent_->send(this->index_, p))
+      return false;
+    this->ref_ = target;
+    this->have_ref_ = true;
+  }
+  if (plan.power_off) {
+    telink::onoff(false, p);
+    if (!this->parent_->send(this->index_, p))
+      return false;
+    this->fixture_on_ = false;
+  }
+  return true;
+}
+
+void AmbleLight::write_state(light::LightState *state) {
+  if (this->in_setup_)
+    return;  // ESPHome's boot-time restore, not a command
+  if (!this->parent_->mesh_ready()) {
+    // A genuine command we cannot carry out yet. Say so, and do not let HA believe
+    // it took: put the entity back to the last state the fixture reported.
+    ESP_LOGW(TAG, "fixture %u: mesh not ready, command rejected", this->index_);
+    this->parent_->publish_last_known(this->index_);
+    return;
+  }
+  if (this->identifying_)
+    this->identifying_ = false;  // HA moved the light mid-flash: the new command wins, no restore
+  if (!this->realise(state->current_values)) {
+    // Refused by the guard or the mesh: do not leave HA believing it took.
+    this->parent_->publish_last_known(this->index_);
+    return;
+  }
+  this->parent_->request_status_after(this->index_, 300);
+}
+
+void AmbleLight::apply_status(const telink::Status &st) {
+  if (this->state_ == nullptr || !st.valid)
+    return;
+  this->fixture_on_ = st.on;
+  this->ref_ = look_from_status(st);
+  this->have_ref_ = true;
+  if (this->identifying_)
+    return;  // the flash is not the state
+  light::LightColorValues v;
+  v.set_state(st.on);
+  v.set_brightness(brightness_from_wire(st.intensity));
+  if (st.is_hs) {
+    float r, g, b;
+    rgb_from_hs(st.hue, st.sat, &r, &g, &b);
+    v.set_color_mode(light::ColorMode::RGB);
+    v.set_red(r);
+    v.set_green(g);
+    v.set_blue(b);
+    v.set_color_brightness(1.0f);
+  } else {
+    v.set_color_mode(light::ColorMode::COLOR_TEMPERATURE);
+    v.set_color_temperature(mireds_from_kelvin(st.cct_kelvin));
+    this->gm_ = st.gm;
+  }
+  this->last_reported_ = v;
+  this->state_->current_values = v;
+  this->state_->remote_values = v;
+  this->state_->publish_state();
+}
+
+void AmbleLight::begin_identify() {
+  if (this->state_ == nullptr || !this->parent_->mesh_ready())
+    return;
+  const Fixture &f = this->parent_->fixture(this->index_);
+  this->before_identify_ = this->state_->current_values;
+  this->gm_before_identify_ = this->gm_;
+  this->identifying_ = true;
+  light::LightColorValues flash;
+  flash.set_state(true);
+  flash.set_brightness(0.5f);
+  flash.set_color_mode(light::ColorMode::COLOR_TEMPERATURE);
+  uint16_t k = 5600 < f.caps.cct_min ? f.caps.cct_min : (5600 > f.caps.cct_max ? f.caps.cct_max : 5600);
+  flash.set_color_temperature(mireds_from_kelvin(k));
+  int gm = this->gm_;
+  this->gm_ = 0;
+  this->realise(flash);  // powers on if needed
+  this->gm_ = gm;
+}
+
+void AmbleLight::end_identify() {
+  if (!this->identifying_)
+    return;  // HA took over mid-flash; its command stands
+  this->identifying_ = false;
+  this->gm_ = this->gm_before_identify_;
+  this->realise(this->before_identify_);  // back to what it was, off included
+  this->parent_->request_status_after(this->index_, 300);
+}
+
+void AmbleGmNumber::control(float value) {
+  int gm = (int) lroundf(value);
+  this->parent_->set_gm(this->index_, gm);
+  this->publish_state(gm);
+}
+
+void AmbleIdentifyButton::press_action() { this->parent_->identify(this->index_); }
+void AmbleResyncButton::press_action() { this->parent_->resync(); }
+
+}  // namespace amble
+}  // namespace esphome
+#endif

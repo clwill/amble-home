@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>amble-home · Edit</title>
+<style>
+/* theme:start */
+/* amble-home visual system. One source: web/box/build.mjs copies this block into
+   home.html, edit.html and web/flasher/index.html between the theme markers.
+   World: a studio control surface read in a dim room. Dark only, by decision
+   (#28): one scheme to verify, and a lit lamp reads best on black. Type is the system stack on
+   purpose: the box serves these pages offline over its own Wi-Fi, so there is no
+   font to fetch, and the flasher keeps the same face so the two feel like one. */
+:root {
+  color-scheme: dark;
+  --ink: #0e0f12;        /* page */
+  --surface: #16181d;    /* panels, table rows on hover */
+  --line: #2b2f38;       /* hairlines */
+  --text: #ebe8e1;       /* warm paper, not pure white */
+  --muted: #a39f95;
+  --accent: #f0b24a;     /* tungsten: the 3200 K of a studio key light */
+  --accent-ink: #1a1304; /* text on accent */
+  --daylight: #9ec5ff;   /* the other end of the CCT slider */
+  --live: #5fd39a;
+  --danger: #ff7a70;
+  --radius: .55rem;
+  --shadow: 0 8px 24px -12px rgba(0, 0, 0, .7);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+  scrollbar-color: var(--line) transparent;
+}
+* { box-sizing: border-box; }
+html { background: var(--ink); }
+body { margin: 0 auto; padding: 1.75rem 1rem 3rem; color: var(--text); background: var(--ink); max-width: 44rem; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: .25rem; }
+a { color: var(--accent); text-decoration: underline; text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .92em; }
+code { background: var(--surface); border: 1px solid var(--line); border-radius: .3rem; padding: .05em .35em; overflow-wrap: anywhere; }
+kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: .3rem; padding: 0 .35em; background: var(--surface); }
+p { margin: .6rem 0; }
+.muted { color: var(--muted); }
+
+/* Wordmark: a drawn tube light next to the name. Same on every page. */
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+.brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--text); }
+.brand svg { width: 2rem; height: 2rem; flex: none; }
+.brand .tube { fill: var(--accent); }
+.brand .halo { fill: var(--accent); opacity: .18; }
+h1 { font-size: 1.35rem; font-weight: 650; letter-spacing: -.02em; margin: 0; line-height: 1.2; }
+h1 .page { color: var(--muted); font-weight: 450; }
+h2 { font-size: 1.05rem; font-weight: 650; letter-spacing: -.01em; margin: 2rem 0 .5rem; }
+.nav { color: var(--muted); font-size: .95rem; }
+
+/* Data tables: tabular numerals, hairlines, a hover surface, no card chrome. */
+table { border-collapse: collapse; width: 100%; margin-top: .75rem; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: .85rem; letter-spacing: .01em; padding: .3rem .5rem; border-bottom: 1px solid var(--line); }
+td { padding: .55rem .5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:hover td { background: var(--surface); }
+tbody tr:last-child td { border-bottom: none; }
+tr.dark td, tr.na td { color: var(--muted); }
+td.lamp-cell { width: 2.4rem; padding-right: 0; }
+td.summary { text-align: right; white-space: nowrap; }
+
+/* The lamp: a fixture rendered in its own colour. --c is the colour it is showing,
+   --g the glow strength. Off: an outline. Never heard: a dashed outline. */
+.lamp { display: inline-block; width: 1.35rem; height: 1.35rem; border-radius: .4rem; vertical-align: middle;
+  background: var(--c, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--line)) 70%, var(--line));
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--c, transparent) calc(var(--g, 0) * 100%), transparent);
+  transition: background .4s cubic-bezier(.2, .8, .2, 1), box-shadow .4s cubic-bezier(.2, .8, .2, 1); }
+.lamp.off { background: transparent; border-color: var(--line); box-shadow: none; }
+.lamp.na { background: transparent; border: 1px dashed var(--line); box-shadow: none; }
+.lamp.live-dot { width: .7rem; height: .7rem; border-radius: 50%; }
+
+/* Controls */
+button, .button { font: inherit; font-weight: 600; color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: .45rem .9rem; cursor: pointer; line-height: 1.2;
+  transition: background .15s ease-out, border-color .15s ease-out, transform .15s ease-out; }
+button:hover:not(:disabled) { border-color: var(--muted); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { color: var(--muted); cursor: not-allowed; opacity: .6; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: var(--shadow); }
+button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+button.small { padding: .25rem .6rem; font-size: .85rem; font-weight: 500; }
+input[type="file"] { font: inherit; color: var(--muted); max-width: 100%; }
+input[type="file"]::file-selector-button { font: inherit; font-weight: 600; color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: .45rem .9rem; margin-right: .75rem; cursor: pointer; }
+input[type="file"]::file-selector-button:hover { border-color: var(--muted); }
+input[type="checkbox"] { width: 1.05rem; height: 1.05rem; }
+.bar { display: flex; gap: .7rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+#msg { margin-top: .9rem; min-height: 1.5rem; color: var(--muted); }
+#msg.error, #acct-msg.error { color: var(--danger); }
+
+/* Doors on the Edit page */
+.doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+.doors .panel { margin: 0; }
+.doors h2, h2.section { grid-column: 1 / -1; font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; margin: 2.25rem 0 .25rem; padding-bottom: .45rem; border-bottom: 1px solid var(--line); }
+.door h3 { font-size: 1.15rem; font-weight: 700; letter-spacing: -.015em; margin: 0 0 .75rem; }
+.door p.explain { color: var(--muted); font-size: .92rem; }
+.door[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+#acct-saved .label { color: var(--muted); font-size: .85rem; margin: 0 0 .15rem; }
+#acct-saved .who { margin: 0; }
+#acct-saved .region { color: var(--muted); font-size: .9rem; margin: 0 0 .75rem; }
+#acct-pick button { margin: .25rem .4rem .25rem 0; }
+#rows-empty { color: var(--muted); opacity: .7; margin: .5rem 0 0; }
+.doors input[type="email"], .doors input[type="password"], .doors select { font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: .45rem .7rem; width: 100%; }
+
+/* Disclosure */
+details { margin-top: .75rem; border: 1px solid var(--line); border-radius: var(--radius); padding: .4rem .9rem; background: var(--surface); }
+summary { cursor: pointer; font-weight: 600; padding: .25rem 0; }
+summary::marker { color: var(--accent); }
+details[open] summary { border-bottom: 1px solid var(--line); margin-bottom: .4rem; }
+
+/* Panels and lists on the flasher page */
+.panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 1.1rem 1.2rem; margin: 1.25rem 0; }
+.lede { font-size: 1.08rem; max-width: 36rem; }
+ol.steps { padding-left: 0; list-style: none; counter-reset: step; margin: .5rem 0 0; }
+ol.steps li { counter-increment: step; position: relative; padding: .45rem 0 .45rem 2.2rem; }
+ol.steps li::before { content: counter(step); position: absolute; left: 0; top: .5rem; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: .85rem; display: grid; place-items: center; }
+ul.plain { padding-left: 1.1rem; } ul.plain li { margin: .3rem 0; }
+.version { color: var(--muted); font-variant-numeric: tabular-nums; margin: .75rem 0 0; }
+esp-web-install-button { --esp-tools-button-color: var(--accent); --esp-tools-button-text-color: var(--accent-ink); --esp-tools-button-border-radius: .55rem; }
+footer { margin-top: 2.5rem; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+@media (max-width: 480px) {
+  body { padding: 1.1rem .9rem 2.5rem; }
+  td, th { padding-left: .35rem; padding-right: .35rem; }
+  .bar { gap: .5rem; }
+}
+/* theme:end */
+</style>
+<script src="/amble/sql-wasm.js"></script>
+</head>
+<body data-page="edit">
+<header>
+  <a class="brand" href="/" aria-label="amble-home home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle class="halo" cx="16" cy="16" r="15"/><rect class="tube" x="6" y="12.5" width="20" height="7" rx="3.5"/></svg>
+    <h1><span id="brand-name">amble-home</span> <span class="page">· Edit</span></h1>
+  </a>
+  <a class="nav" href="/">Home</a>
+</header>
+<section id="doors" class="doors">
+<h2>Where are your fixtures?</h2>
+<!-- cloud:start -->
+<div id="door-account" class="panel door">
+<h3>Your amaran account</h3>
+<div id="acct-saved" hidden>
+<p class="label">Saved sign-in</p>
+<p class="who" id="acct-saved-email"></p>
+<p class="region" id="acct-saved-region"></p>
+<p><button id="acct-refresh" type="button">Refresh from amaran</button></p>
+<p><button id="acct-forget" type="button" class="small">Forget</button></p>
+</div>
+<form id="acct-form" onsubmit="return false">
+<p><input type="email" id="acct-email" autocomplete="off" placeholder="Email" aria-label="Email"></p>
+<p><input type="password" id="acct-pw" autocomplete="off" placeholder="Password" aria-label="Password"></p>
+<p><select id="acct-region" aria-label="Region"></select></p>
+<p><label><input type="checkbox" id="acct-remember"> Remember this sign-in on the box</label><br><span class="muted">Kept in plain storage on the box, next to its Wi-Fi password, until you press Forget.</span></p>
+<p><button id="acct-fetch" type="submit">Fetch fixtures</button></p>
+</form>
+<p id="acct-msg" class="muted"></p>
+<div id="acct-pick"></div>
+<p id="acct-explain" class="explain">Your amaran password goes to this box over your home network, is used for one sign-in, and is not stored, unless you tick Remember. The box hands back a one-time token and this page reads your mesh.</p>
+</div>
+<!-- cloud:end -->
+<div id="door-db" class="panel door">
+<h3>The app's database</h3>
+<input type="file" id="file" accept=".db,.sqlite,application/octet-stream">
+<p class="explain">Open the amaran desktop app's <code>amaran.db</code>. It is read <strong>in this browser</strong>; only the fixtures you tick and the mesh keys they need are sent to this box, on your network.</p>
+<details id="where">
+<summary>Where is amaran.db?</summary>
+<p>A web page cannot search your disk, but the file dialog can jump straight to the folder.</p>
+<p><strong>macOS:</strong> the file lives inside the amaran Desktop app's sandbox, which the file dialog hides. In the dialog press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>G</kbd> first, then paste this folder with <kbd>⌘</kbd><kbd>V</kbd> and press Return. Open the folder whose name ends in <code>_secure_id</code> (such as <code>80112112_secure_id</code>) and pick <code>amaran.db</code>:<br>
+<code id="macpath">~/Library/Containers/com.sidus.amaran-desktop/Data/Library/Application Support/amaran Desktop/</code> <button id="copypath" type="button" class="small">Copy path</button></p>
+<p><strong>Windows:</strong> usually under <code>%APPDATA%\amaran Desktop\</code>; paste that into the dialog's address bar. If it is not there, search your user folder for <code>amaran.db</code>.</p>
+<p>Quit the amaran app first if the file will not open, and never move or delete it: the box only reads a copy.</p>
+</details>
+</div>
+<div id="door-takeover" class="panel door" aria-disabled="true">
+<h3>Take-over (coming)</h3>
+<p class="explain">For fixtures with neither an account nor a database. Not available yet.</p>
+</div>
+</section>
+<h2 class="section">Your fixtures</h2>
+<p id="fixtures-msg" class="muted" hidden></p>
+<p id="rows-empty">Fixtures appear here once you fetch them.</p>
+<table hidden><thead><tr><th></th><th>Name</th><th>Mesh id</th><th></th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<div class="bar"><button id="save" class="primary" disabled>Save</button><span class="muted">Save activates the ticked fixtures and reboots the box.</span></div>
+<div class="bar"><button id="setpin">Set PIN</button><span id="pin" class="muted"></span></div>
+<p id="msg" class="muted"></p>
+<script type="module">
+import { extract, toImportPayload } from "/amble/importer.js";
+// cloud:start
+import * as cloud from "/amble/cloud.js";
+// cloud:end
+import "/amble/box.js";
+const caps = await (await fetch("/amble/fixture-caps.json")).json();
+const SQL = await initSqlJs({ locateFile: (f) => "/amble/" + f });
+await window.ambleEdit({ extract, toImportPayload, caps, SQL, cloud: typeof cloud === "undefined" ? null : cloud });
+document.body.dataset.ready = "1";
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# amble-home RELEASE configuration for the ESP32-C6: the twin of amble-home.yaml
+# for the other chip family the flasher page offers (#24). Everything shared is
+# in amble-home.common.yaml; the same release guard applies.
+
+substitutions:
+  amble_allow_group: "false"
+  board_led: GPIO8  # the Waveshare ESP32-C6 dev kit's WS2812
+
+packages:
+  common: !include amble-home.common.yaml
+
+esphome:
+  build_path: build/amble-home-c6
+
+esp32:
+  board: esp32-c6-devkitc-1
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+    version: recommended
+
+amble:
+  release: true
+  allow_group: ${amble_allow_group}
+  mdns_alias: amble-home

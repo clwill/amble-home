@@ -1,0 +1,13 @@
+{
+  "name": "amble-importer",
+  "private": true,
+  "type": "module",
+  "description": "amble-home: in-browser amaran.db import logic (sql.js) and its Node tests",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "puppeteer-core": "24.43.1",
+    "sql.js": "1.15.0"
+  }
+}

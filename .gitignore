@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# ESPHome build output and per-user secrets
+.esphome/
+secrets.yaml
+*.secrets.yaml
+
+# User data from the amaran app: key-bearing, never committed
+*.db
+*.db-journal
+amaran*.json
+mesh_config.h
+mesh_config.*.h
+components/amble/assets_gen.h
+fixtures.local.*
+
+# Toolchains and build dirs
+build/
+.pio/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+
+# Local env
+.env
+.dev.vars
+
+# Worktrees
+.worktrees/
+
+# Host-test dependencies fetched by tests/host/fetch-deps.sh
+tests/host/third_party/
+

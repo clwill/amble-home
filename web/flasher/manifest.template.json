@@ -1,0 +1,16 @@
+{
+  "name": "amble-home",
+  "version": "__VERSION__",
+  "home_assistant_domain": "esphome",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [{ "path": "amble-home-esp32s3.factory.bin", "offset": 0 }]
+    },
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [{ "path": "amble-home-esp32c6.factory.bin", "offset": 0 }]
+    }
+  ]
+}

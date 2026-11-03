@@ -1,0 +1,68 @@
+# amble-home DEV configuration — Chris's bench board, next to the production mesh.
+#
+# Dev guard: group/broadcast mesh sends are compiled out and only the fixture in
+# `dev_allowlist` (from secrets.yaml) can receive any command. Wi-Fi credentials
+# come from secrets.yaml. The release configurations strangers flash are
+# amble-home.yaml (S3) and amble-home-c6.yaml (C6); everything shared is in
+# amble-home.common.yaml. Own build_path so the builds never share a directory
+# (docs/bench.md). The bench board is the ESP32-S3 N16R8 devkit, so this build
+# keeps its 16 MB and PSRAM; the release images use neither.
+#
+# Fixtures are not in this file: import them from the amaran app's database with
+# tools/import-post.mjs or the box's Edit page.
+
+substitutions:
+  amble_allow_group: "false"
+  board_led: GPIO48
+
+packages:
+  common: !include amble-home.common.yaml
+
+esphome:
+  build_path: .esphome/build/amble-home-dev
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    version: recommended
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+# Serial console on UART0, not the native USB port: a host holding the USB
+# serial port open without reading it stalls the firmware (docs/bench.md).
+logger:
+  hardware_uart: UART0
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+amble:
+  release: false
+  allow_group: ${amble_allow_group}
+  mdns_alias: amble-home
+  dev_allowlist:
+    - !secret spare_address
+
+# Memory and loop-time readings for the board matrix (#24); dev build only.
+debug:
+  update_interval: 5s
+
+sensor:
+  - platform: debug
+    free:
+      name: Heap free
+      entity_category: diagnostic
+    block:
+      name: Heap largest block
+      entity_category: diagnostic
+    loop_time:
+      name: Loop time
+      entity_category: diagnostic
+    psram:
+      name: PSRAM free
+      entity_category: diagnostic

@@ -1,0 +1,21 @@
+name: AI tooling
+
+on:
+  pull_request:
+    paths: ['AGENTS.md', 'CLAUDE.md', '**/AGENTS.md', '**/CLAUDE.md', '.agents/**', '.claude/**', 'scripts/check-ai-tooling.mjs', '.github/workflows/ai-tooling.yml']
+  push:
+    branches: [main]
+    paths: ['AGENTS.md', 'CLAUDE.md', '**/AGENTS.md', '**/CLAUDE.md', '.agents/**', '.claude/**', 'scripts/check-ai-tooling.mjs', '.github/workflows/ai-tooling.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: node scripts/check-ai-tooling.mjs

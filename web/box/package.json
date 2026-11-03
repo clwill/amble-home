@@ -1,0 +1,7 @@
+{
+  "name": "amble-box-pages",
+  "private": true,
+  "type": "module",
+  "description": "amble-home: the box's Home and Edit pages; build.mjs assembles dist/ for the firmware",
+  "scripts": { "test": "node --test box.test.mjs build.test.mjs", "build": "node build.mjs" }
+}

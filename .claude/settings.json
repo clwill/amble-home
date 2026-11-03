@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Edit", "Write", "Glob", "Grep", "WebFetch", "WebSearch",
+      "Bash(gh issue view *)", "Bash(gh issue list*)", "Bash(gh issue comment *)",
+      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git add *)", "Bash(git commit *)",
+      "Bash(node scripts/check-ai-tooling.mjs)",
+      "Bash(esphome config *)", "Bash(esphome compile *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)", "Bash(rm -rf ~)", "Bash(rm -rf /*)",
+      "Bash(git push --force *)"
+    ]
+  }
+}

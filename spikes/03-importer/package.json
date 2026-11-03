@@ -1,0 +1,8 @@
+{
+  "name": "amble-spike3-importer",
+  "private": true,
+  "type": "module",
+  "description": "Spike 3 (throwaway): in-browser amaran.db importer logic + Node harness",
+  "scripts": { "test": "node test.mjs" },
+  "devDependencies": { "sql.js": "1.15.0" }
+}

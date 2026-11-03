@@ -1,0 +1,88 @@
+# amble-home: everything the release and bench configurations share. Not a
+# configuration on its own: amble-home.yaml (ESP32-S3), amble-home-c6.yaml
+# (ESP32-C6) and amble-home.dev.yaml (the bench) each `packages:`-include this
+# file and add the chip, the build directory, the release guard and, for the
+# bench, its secrets. Substitutions the top files must set: amble_allow_group,
+# board_led.
+#
+# No credentials live here. After flashing, the box starts its own Wi-Fi
+# ("amble-home-xxxxxx") and accepts yours over Improv (from the flasher page) or
+# the captive portal. Fixtures are not in this file either: import them on the
+# box's Edit page from the amaran app's database or your amaran account.
+
+esphome:
+  # Every box is amble-home-xxxxxx (its MAC's last six hex digits), on the network
+  # and in Home Assistant, so two boxes never share a name (#25). The bare
+  # amble-home.local still answers (amble: mdns_alias) for homes with one box.
+  name: amble-home
+  friendly_name: amble-home
+  name_add_mac_suffix: true
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+# Console on the native USB port: Improv Wi-Fi shares the logger's port, and the
+# flasher page talks to the board over that same USB connection, so the Wi-Fi
+# prompt after flashing works. (The bench config logs on UART0 instead, because a
+# host holding the USB port open without reading it stalls the firmware; a user's
+# flasher releases the port when done.)
+logger:
+  level: INFO
+  hardware_uart: USB_SERIAL_JTAG
+
+api:
+
+ota:
+  - platform: esphome
+
+safe_mode:
+
+wifi:
+  ap: {}  # the setup network is named after the box (amble-home-xxxxxx)
+
+captive_portal:
+
+improv_serial:
+  # After Wi-Fi setup (and whenever the flasher page reconnects to a set-up box) the
+  # box hands the page this address, which ESP Web Tools shows as "Visit Device".
+  # Without it the page has no link: only the full web_server component advertises one.
+  next_url: http://{{device_name}}.local/
+
+# The box serves its own pages on web_server_base. The `web_server` component is
+# deliberately absent: its entity controls would let the box control lights.
+web_server_base:
+
+esp32_ble:
+  enable_on_boot: true
+
+# The addressable RGB LED most dev boards carry, left lit by the factory firmware
+# (issue #11). The pin is per chip (board_led); a board without an LED on that
+# pin drives nothing.
+light:
+  - platform: esp32_rmt_led_strip
+    id: board_rgb
+    name: "Board RGB LED"
+    pin: ${board_led}
+    num_leds: 1
+    chipset: WS2812
+    rgb_order: GRB
+    restore_mode: ALWAYS_OFF
+    internal: true
+
+# Box housekeeping entities (spec "Entity model": a native restart control) and
+# the two ESPHome diagnostics the spec lists beside the mesh counters.
+button:
+  - platform: restart
+    name: Restart
+    entity_category: diagnostic
+
+sensor:
+  - platform: wifi_signal
+    name: Wi-Fi signal
+    update_interval: 60s
+    entity_category: diagnostic
+  - platform: uptime
+    name: Uptime
+    entity_category: diagnostic

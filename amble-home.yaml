@@ -1,0 +1,31 @@
+# amble-home RELEASE configuration for every supported ESP32-S3 board: what the
+# browser flasher installs on an S3 and what CI builds (amble-home-c6.yaml is the
+# ESP32-C6 twin; everything shared is in amble-home.common.yaml). Built for 8 MB
+# of flash and no PSRAM, so one image runs on every S3 board in the README table,
+# the 16 MB boards included (#24).
+#
+# Guard: a release build may address exactly the fixtures in its own table, by
+# unicast; group/broadcast sends are compiled out. Chris's studio configuration
+# alone sets amble_allow_group: "true". Development happens on amble-home.dev.yaml.
+
+substitutions:
+  amble_allow_group: "false"
+  board_led: GPIO48  # the devkits' WS2812; unconnected on the Atom and the XIAO
+
+packages:
+  common: !include amble-home.common.yaml
+
+esphome:
+  build_path: build/amble-home-s3
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+    version: recommended
+
+amble:
+  release: true
+  allow_group: ${amble_allow_group}
+  mdns_alias: amble-home

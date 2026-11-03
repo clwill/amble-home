@@ -1,0 +1,100 @@
+--- a/components/bt/esp_ble_mesh/core/net.c
++++ b/components/bt/esp_ble_mesh/core/net.c
+@@ -2058,6 +2058,85 @@
+ 
+     BT_DBG("NotIgnoreNetMsg");
+     return false;
++}
++
++/* ---- AMARAN passive status snoop --------------------------------------- *
++ * Telink fixtures send their 0x26 status reply addressed to the original
++ * provisioner (dst 0x0001), never to whoever requested the status. The
++ * normal access-layer dispatch therefore drops these on this node: the dst
++ * isn't one of our elements, and trans_unseg() bails before decrypting any
++ * non-local message. We decrypt a copy of the access payload here using the
++ * bound AppKey and hand the plaintext to the application via a weak hook,
++ * without touching the relay path the original PDU follows.
++ *
++ * Ported to ESP-IDF v5.5.x from the amaran-BLE-control bridge patch (v5.3.2):
++ * the receive entry point is now bt_mesh_generic_net_recv(); the hook sits in
++ * the same place, after bt_mesh_net_decode() and before ignore_net_msg().
++ *
++ * Defined weak so the core component links standalone; the firmware
++ * provides the strong implementation. */
++__attribute__((weak)) void amaran_mesh_access_rx(uint16_t src, uint16_t dst,
++                                                  const uint8_t *data,
++                                                  uint16_t len)
++{
++    (void)src; (void)dst; (void)data; (void)len;
++}
++
++static void amaran_snoop_access(struct bt_mesh_net_rx *rx,
++                                struct net_buf_simple *buf)
++{
++    if (rx->ctl) {
++        return;                         /* control message, not access */
++    }
++    /* Need at least: net header + transport hdr + 1-byte opcode + TransMIC. */
++    if (buf->len < BLE_MESH_NET_HDR_LEN + 1 + 1 + 4) {
++        return;
++    }
++
++    uint8_t *tp = buf->data + BLE_MESH_NET_HDR_LEN;
++    uint16_t tlen = buf->len - BLE_MESH_NET_HDR_LEN;
++    uint8_t thdr = tp[0];
++
++    if (thdr & 0x80) {
++        return;                         /* segmented; status replies are not */
++    }
++    if (!((thdr >> 6) & 0x01)) {
++        return;                         /* AKF=0 -> device-key, not app traffic */
++    }
++    uint8_t aid = thdr & 0x3f;
++
++    size_t count = bt_mesh_rx_appkey_size();
++    for (size_t i = 0; i < count; i++) {
++        struct bt_mesh_app_key *key = bt_mesh_rx_appkey_get(i);
++        if (!key || key->net_idx != rx->sub->net_idx) {
++            continue;
++        }
++        struct bt_mesh_app_keys *keys = (rx->new_key && key->updated)
++                                        ? &key->keys[1] : &key->keys[0];
++        if (aid != keys->id) {
++            continue;
++        }
++
++        struct net_buf_simple in;
++        net_buf_simple_init_with_data(&in, tp + 1, tlen - 1);
++        in.len -= 4;                    /* exclude TransMIC, as sdu_recv does */
++
++        uint8_t storage[32];
++        struct net_buf_simple out;
++        net_buf_simple_init_with_data(&out, storage, sizeof(storage));
++        out.len = 0;
++
++        if (bt_mesh_app_decrypt(keys->val, false, 0, &in, &out, NULL,
++                                rx->ctx.addr, rx->ctx.recv_dst, rx->seq,
++                                BLE_MESH_NET_IVI_RX(rx)) == 0) {
++            BT_INFO("AMARAN-STATUS src 0x%04x dst 0x%04x len %u: %s",
++                    rx->ctx.addr, rx->ctx.recv_dst, out.len,
++                    bt_hex(out.data, out.len));
++            amaran_mesh_access_rx(rx->ctx.addr, rx->ctx.recv_dst,
++                                  out.data, out.len);
++        }
++        return;
++    }
+ }
+ 
+ void bt_mesh_generic_net_recv(struct net_buf_simple *data,
+@@ -2092,6 +2171,11 @@
+     BT_DBG("NetRecv, Src 0x%04x Dst 0x%04x Rssi %d NetIf %u",
+         rx->ctx.addr, rx->ctx.recv_dst, rx->ctx.recv_rssi, net_if);
+ 
++    /* AMARAN: snoop fixture status replies before the normal (dst-gated)
++     * dispatch runs. Does not consume or modify buf -- the relay path below
++     * still sees the original PDU. */
++    amaran_snoop_access(rx, buf);
++
+     if (ignore_net_msg(rx->ctx.addr, rx->ctx.recv_dst)) {
+         BT_DBG("IgnoreNetMsg");
+         goto free_net_msg_buf;
