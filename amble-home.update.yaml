@@ -1,0 +1,29 @@
+# amble-home: the update feed. Included by the release configurations only
+# (amble-home.yaml, amble-home-c6.yaml). The bench configuration leaves it out on
+# purpose: Install would replace the dev build with the release image, and with it
+# the dev build's spare-only allowlist.
+#
+# The box fetches the hosted flasher manifest once after boot and every hour after
+# that, over HTTPS, and compares its version with its own (esphome: project:
+# version). A newer one shows as an Update entity on the box's device page in Home
+# Assistant with an Install button; pressing it makes the box download that chip's
+# OTA image, check its MD5 and reboot into it. The box never installs on its own.
+# A manifest it cannot fetch makes no new offer; an offer already shown stays until
+# the next successful check, and Install still verifies the image before anything
+# is written.
+
+substitutions:
+  # The bench points a build at a test manifest with -s amble_update_source <url>.
+  amble_update_source: "https://clwill.github.io/amble-home/manifest.json"
+
+http_request:
+
+ota:
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: Firmware
+    device_class: firmware
+    source: ${amble_update_source}
+    update_interval: 1h

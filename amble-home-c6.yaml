@@ -8,6 +8,7 @@ substitutions:
 
 packages:
   common: !include amble-home.common.yaml
+  update: !include amble-home.update.yaml
 
 esphome:
   build_path: build/amble-home-c6
