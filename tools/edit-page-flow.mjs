@@ -38,8 +38,9 @@ try {
   await page.goto(`${base}/amble/edit`, { waitUntil: "networkidle0", timeout: 30000 });
   await page.waitForFunction(() => document.body.dataset.ready === "1", { timeout: 15000 });
   console.log(ts(), "page ready");
+  console.log(ts(), `on open: ${await page.$$eval("#rows tr", (trs) => trs.length)} saved row(s) from the box, ID live, nothing checkable`);
   await (await page.$("#file")).uploadFile(dbPath);
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   const rows = await page.$$eval("#rows tr", (trs) => trs.map((tr) => ({ name: tr.children[1].textContent, checked: tr.querySelector("input").checked })));
   const ticked = rows.filter((r) => r.checked).map((r) => r.name);
   console.log(ts(), `rows: ${rows.length}, pre-checked: ${ticked.join(", ") || "(none)"}`);

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boxName } from "../importer/importer.js";
-import { rowsFor, selectedPayload, renderStatus, escapeHtml, idFor, describeImport, lockedText, rowHtml, importStep, pinOutcome, SAVE_DEADLINE_MS, swatchFor, kelvinToRgb, lampHtml, meshLine, applyName, changeLine, skippedLine } from "./box.js";
+import { rowsFor, savedRows, selectedPayload, renderStatus, escapeHtml, idFor, describeImport, lockedText, rowHtml, importStep, pinOutcome, SAVE_DEADLINE_MS, swatchFor, kelvinToRgb, lampHtml, meshLine, applyName, changeLine, skippedLine } from "./box.js";
 
 const extracted = { fixtures: [
   { mac: "AA:BB:CC:8D:ED:B3", address: 0x1E, name: "amaran P60c", caps: {} },
@@ -212,4 +212,21 @@ test("source noun reaches the change line and the gone mark (M4)", () => {
   assert.match(rowHtml(rows[2], 2), /no longer in the database/);
   assert.match(rowHtml(rowsFor(ex2, st2)[2], 2), /no longer in your account/);
   assert.match(changeLine(rowsFor(ex2, st2)), /no longer in your account/);
+});
+
+test("savedRows: the box's own fixtures on open, ID live, nothing checkable until a fetch", () => {
+  const rows = savedRows(status);
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows.map((r) => [r.id, r.name, r.saved, r.configured, r.live, r.checked, r.invalid, r.hex]),
+    [["amble_8dedb3", "amaran P60c", true, true, true, false, false, ""]]);
+  assert.deepEqual(savedRows(null), []);
+  assert.deepEqual(savedRows({ configured: false, fixtures: [] }), []);
+  assert.deepEqual(savedRows({ configured: true }), []);
+  const html = rowHtml(rows[0], 0);
+  assert.match(html, /<input type="checkbox" data-i="0"\s+disabled>/);
+  assert.match(html, /<button class="small" data-id="amble_8dedb3">ID<\/button>/);
+  assert.ok(!/0x/.test(html), "no mesh id: the status call does not carry one");
+  const evil = savedRows({ configured: true, fixtures: [{ id: "amble_000001", name: "<b>x</b>", live: false }] })[0];
+  assert.ok(!/<b>/.test(rowHtml(evil, 0)));
+  assert.match(rowHtml(evil, 0), /configured, silent/);
 });

@@ -4,6 +4,10 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
+## Unreleased
+
+- **The Edit page opens with the box's fixtures.** Before any fetch, the page lists the fixtures the box already holds, from the same status call the Home page uses, with the live dot and a working **ID** button on each. ID was only enabled on rows the box held, and those rows existed only after a fetch, so the one moment it was wanted (right after a Save, when the box has rebooted and the list is gone) needed a second fetch (#3). The opening rows cannot be checked: Save needs keys and addresses the status call does not carry, and a line says to fetch from the account or open the database to change the selection. A fetch replaces them with the merged view as before. Page only; no firmware change beyond the embedded page.
+
 ## 1.1.0 (2026-11-03)
 
 - **Home Assistant offers updates.** The box fetches the flasher page's manifest after boot and hourly; a newer release shows as an **Update** row on the box's device page with an Install button, and pressing it downloads that chip's OTA image from GitHub Pages over HTTPS, checks its MD5 and reboots into it (`amble-home.update.yaml`, included by the release configs only; the bench config leaves it out so an Install can never replace a dev build). The manifest carries an `ota` block per chip, rendered by CI; `check.mjs` refuses a manifest whose checksums do not match the images beside it. Proved on the dev board: a 0.0.0 build offered 1.0.1 in HA, installed it from the hosted image in under a minute, and came back with its Wi-Fi and fixture. Boxes on 1.0.x need one more update by hand to get the feed.

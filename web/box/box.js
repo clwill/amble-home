@@ -62,6 +62,19 @@ export function rowsFor(extracted, status, source = "account") {
   return rows;
 }
 
+// Edit-page rows before any fetch: the fixtures the box already holds, from the same
+// status call the Home page uses. ID works on them at once (the moment it is wanted is
+// right after a Save, when the box has just rebooted and the fetched list is gone).
+// They cannot be checked: Save needs keys and addresses that the status call does not
+// carry, so the selection changes only after a fetch replaces these rows.
+export function savedRows(status) {
+  if (!status?.configured || !Array.isArray(status.fixtures)) return [];
+  return status.fixtures.map((f) => ({
+    id: f.id, invalid: false, saved: true, mac: null, address: null, hex: "", name: f.name,
+    configured: true, live: !!f.live, checked: false, change: null,
+  }));
+}
+
 const sourcePhrase = (source) => (source === "database" ? "the database" : "your account");
 
 // One sentence on what differs from the box's saved fixtures; "" when nothing does.
@@ -84,9 +97,10 @@ export function skippedLine(skipped) {
   return `${n} ${n === 1 ? "record" : "records"} skipped: ${[...by].map(([r, c]) => `${r} ×${c}`).join(", ")}.`;
 }
 
-// One Edit-table row. Every value is escaped; an invalid row cannot be checked or flashed.
+// One Edit-table row. Every value is escaped; an invalid row cannot be checked or flashed;
+// a saved row (before a fetch) can be flashed but not checked.
 export function rowHtml(r, i) {
-  const dis = r.invalid ? "disabled" : "";
+  const dis = r.invalid || r.saved ? "disabled" : "";
   const dot = r.configured ? `<span class="lamp live-dot ${r.live ? "" : "off"}" style="--c:var(--live);--g:1" aria-label="${r.live ? "answering" : "configured, silent"}"></span>` : "";
   const idBtn = r.gone || !(r.invalid || !r.configured)
     ? `<button class="small" data-id="${escapeHtml(r.id)}">ID</button>`
@@ -286,6 +300,9 @@ if (typeof document !== "undefined") {
         result = res; rows = rowsFor(result, status, source); draw();
         fixturesLine([line, skippedLine(res.skipped), changeLine(rows, source)].filter(Boolean).join(" "));
       };
+      // On open: what the box holds, with ID live. A fetch replaces these rows.
+      rows = savedRows(status); draw();
+      if (rows.length) fixturesLine("The fixtures on this box. ID flashes one. To change the selection, fetch from your account or open the database.");
       $("file").addEventListener("change", async (ev) => {
         const file = ev.target.files[0]; if (!file) return;
         const my = ++gen;

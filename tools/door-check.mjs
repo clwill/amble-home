@@ -125,6 +125,7 @@ const srv = http.createServer((q, s) => {
       box.op = { kind: "forget", left: 1 };            // and a queued save is replaced by the erase
       return json(s, 200, { ok: true, state: "queued" });
     }
+    if (u === "/amble/identify" && q.method === "POST") return json(s, 200, { ok: true });
     if (q.method !== "GET") { s.statusCode = 405; return s.end(); }
     if (u === "/amble/status") return json(s, 200, status);
     if (u === "/amble/cloud.js") { s.setHeader("content-type", types[".js"]); return s.end(fakeCloud); }
@@ -183,7 +184,16 @@ try {
   await goto();
   const init = await text("#msg");
   check(init === "", "fresh: page line empty");
-  check(!(await page.$eval("#rows-empty", (e) => e.hidden)) && (await page.$eval("table", (e) => e.hidden)), "fresh: placeholder shown, table hidden");
+  // Opening state: the box's own fixtures from /amble/status, ID live, nothing checkable, Save off; a fetch replaces them.
+  check((await page.$eval("#rows-empty", (e) => e.hidden)) && !(await page.$eval("table", (e) => e.hidden)), "fresh: the box's fixtures shown on open, placeholder gone");
+  const open = await page.$$eval("#rows tr", (t) => t.map((tr) => ({ n: tr.children[1].textContent, dis: tr.querySelector("input").disabled, idOff: tr.querySelector("button").disabled })));
+  check(open.length === 2 && open.every((r) => r.dis && !r.idOff) && open[0].n === "Fixture One", "fresh: 2 saved rows, checkboxes off, ID on");
+  check(/^The fixtures on this box\. ID flashes one\. To change the selection, fetch from your account or open the database\.$/.test(await text("#fixtures-msg")), "fresh: fixtures line says what the rows are");
+  check(await page.$eval("#save", (e) => e.disabled), "fresh: Save disabled with nothing checked");
+  await page.click("#rows button[data-id]");
+  await page.waitForFunction(() => document.querySelector("#msg").textContent !== "", { timeout: 5000 });
+  check((await text("#msg")) === "Flashing…" && box.reqs.some((r) => r.method === "POST" && r.url === "/amble/identify" && r.body === '{"id":"amble_000001"}'), "fresh: ID posts the saved id, page says Flashing…");
+  await page.evaluate(() => { document.querySelector("#msg").textContent = ""; });
   const follows = (a, b) => page.evaluate((x, y) => !!(document.querySelector(x).compareDocumentPosition(document.querySelector(y)) & Node.DOCUMENT_POSITION_FOLLOWING), a, b);
   check(await follows("#acct-form", "#acct-explain"), "fresh: account controls above the explanation");
   check(await follows("#file", "#door-db p.explain"), "fresh: database control above the explanation");
@@ -231,9 +241,9 @@ try {
   await submit(); await settle("#acct-msg");
   const buttons = await page.$$("#acct-pick button[data-uuid]");
   check(buttons.length === 2, `two meshes: picker shows ${buttons.length} buttons`);
-  check((await page.$$eval("#rows tr", (t) => t.length)) === 0, "two meshes: no rows before a choice");
+  check((await page.$$eval("#rows input:not([disabled])", (t) => t.length)) === 0, "two meshes: no fetched rows before a choice");
   await buttons[0].click();
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check((await page.$$eval("#rows tr", (t) => t.length)) >= 2, "two meshes: first choice loads rows");
   check((await page.$eval("#acct-pick", (e) => e.innerHTML)) === "", "two meshes: picker cleared after the choice");
   await pwChecks("two meshes");
@@ -245,9 +255,9 @@ try {
   const pb = await page.$$eval("#acct-pick button", (b) => b.map((x) => ({ d: x.disabled, t: x.textContent })));
   check(pb.length === 2, `onegood: picker shows ${pb.length} buttons`);
   check(pb.length === 2 && !pb[0].d && pb[1].d && /no fixtures/.test(pb[1].t), "onegood: second button disabled, labeled no fixtures");
-  check((await page.$$eval("#rows tr", (t) => t.length)) === 0, "onegood: no rows before a choice");
+  check((await page.$$eval("#rows input:not([disabled])", (t) => t.length)) === 0, "onegood: no fetched rows before a choice");
   await (await page.$("#acct-pick button[data-uuid]")).click();
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check((await page.$$eval("#rows tr", (t) => t.length)) >= 2, "onegood: clicking the first loads rows");
   await pwChecks("onegood");
 
@@ -256,7 +266,7 @@ try {
   check(await page.$eval("#acct-remember", (e) => !e.checked), "remember: unchecked by default");
   check((await page.$eval("#acct-saved", (e) => e.hidden)) && (await page.$eval("#acct-form", (e) => !e.hidden)), "no saved sign-in: form shown, saved block hidden");
   await enter("one@example.invalid");
-  await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await submit(); await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   const rows = await page.$$eval("#rows tr", (t) => t.map((tr) => ({ n: tr.children[1].textContent, c: !!tr.querySelector("input")?.checked })));
   const ticked = rows.filter((r) => r.c).length;
   console.log(`      rows: ${rows.length}, pre-checked: ${ticked}`);
@@ -277,7 +287,7 @@ try {
   await goto();
   await enter("remember@example.invalid");
   await page.click("#acct-remember");
-  await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await submit(); await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check(lastLoginPost()?.remember === true, "remember: POST carries remember:true");
   check((await text("#acct-msg")) === "Signed in. Your sign-in is saved on this box.", "remember: door says saved on this box");
   await page.waitForFunction(() => !document.getElementById("acct-saved").hidden, { timeout: 15000 });
@@ -295,7 +305,7 @@ try {
   check((await page.$eval("#acct-form", (e) => e.hidden)) && (await page.$eval("#acct-explain", (e) => e.hidden)), "saved: form and explanation hidden");
   check((await text("#acct-refresh")) === "Refresh from amaran", "saved: the main action reads Refresh from amaran");
   await page.click("#acct-refresh");
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   const sp = lastLoginPost();
   check(sp && sp.saved === true && !("password" in sp) && !("email" in sp), "saved: Refresh from amaran posts {saved:true} only");
   check((await text("#acct-msg")) === "Signed in. Your sign-in is saved on this box.", "saved: door says saved on this box");
@@ -314,7 +324,7 @@ try {
   box.fail.save = true;
   await enter("remember@example.invalid");
   await page.click("#acct-remember");
-  await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await submit(); await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check((await text("#acct-msg")) === "Signed in. The box could not save your sign-in. It was used for this fetch only.", "save failed: door says the box could not save");
   check(await page.$eval("#acct-saved", (e) => e.hidden), "save failed: no saved block");
   await goto(SAVED_HINT);
@@ -330,7 +340,7 @@ try {
   await enter("remember@example.invalid");
   await page.click("#acct-remember");
   box.omitStore = true;
-  await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await submit(); await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check((await text("#acct-msg")) === "Signed in. The box did not confirm it saved your sign-in.", "no store: remember is not confirmed");
   await goto(SAVED_HINT);
   box.omitStore = true;
@@ -345,14 +355,14 @@ try {
   await page.click("#acct-refresh");
   await page.waitForFunction(() => document.getElementById("acct-refresh").disabled, { timeout: 5000 });
   check(await page.$eval("#acct-forget", (e) => e.disabled), "in flight: Forget disabled while the sign-in runs");
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check(await page.$eval("#acct-forget", (e) => !e.disabled), "in flight: Forget enabled again afterwards");
 
   // Saved refresh leaves the saved stack in place; Forget is the way to another account
   await goto(SAVED_HINT);
   await page.waitForFunction(() => !document.getElementById("acct-saved").hidden, { timeout: 15000 });
   await page.click("#acct-refresh");
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check(!(await page.$eval("#acct-saved", (e) => e.hidden)) && (await page.$eval("#acct-form", (e) => e.hidden)), "refresh after load: saved stack stays, form stays hidden");
 
   // A box PIN: all three cloud routes must carry X-Amble-Pin
@@ -361,7 +371,7 @@ try {
   await goto(SAVED_HINT);
   await page.waitForFunction(() => !document.getElementById("acct-saved").hidden, { timeout: 15000 });
   await page.click("#acct-refresh");
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   await page.click("#acct-forget");
   await page.waitForFunction(() => document.getElementById("acct-saved").hidden, { timeout: 15000 });
   check(box.refused === 0, `PIN: saved GET, login POST, poll GET and forget POST all carried the PIN (${box.refused} refused)`);
@@ -374,7 +384,7 @@ try {
   box.requirePin = true; box.refused = 0;
   await enter("one@example.invalid");
   await submit();
-  await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+  await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
   check((await page.evaluate(() => window.__promptCalls)).length === 1 && (await page.evaluate(() => window.__promptCalls[0])) === "This box has a PIN. Enter it:", "PIN prompt: asked exactly once, with the box's wording");
   check(box.refused === 1, `PIN prompt: only the first POST was refused (${box.refused})`);
   check((await page.evaluate(() => sessionStorage.getItem("amble_pin"))) === "4321", "PIN prompt: PIN stored under amble_pin");
@@ -394,14 +404,14 @@ try {
   if (fs.existsSync(db)) {
     await (await page.$("#file")).uploadFile(db);
     await page.waitForFunction(() => /fixture\(s\) in the database/.test(document.getElementById("fixtures-msg").textContent), { timeout: 15000 });
-    check((await page.$$eval("#rows tr", (t) => t.length)) > 0, "database door: file loaded rows");
+    check((await page.$$eval("#rows input:not([disabled])", (t) => t.length)) > 0, "database door: file loaded rows");
     check(!/your account/.test(await text("#fixtures-msg")), "database door: fixtures line does not say account");
     check((await text("#msg")) === "", "database door: page line stays empty");
 
     // A database chosen after an account fetch replaces the fixtures line; the door keeps its sign-in line.
     await goto();
     await enter("one@example.invalid");
-    await submit(); await page.waitForFunction(() => document.querySelectorAll("#rows tr").length > 0, { timeout: 15000 });
+    await submit(); await page.waitForFunction(() => !!document.querySelector("#rows input:not([disabled])"), { timeout: 15000 });
     await (await page.$("#file")).uploadFile(db);
     await page.waitForFunction(() => /fixture\(s\) in the database/.test(document.getElementById("fixtures-msg").textContent), { timeout: 15000 });
     check(!/your account/.test(await text("#fixtures-msg")) && (await text("#acct-msg")) === "Signed in; nothing stored.", "database after account: fixtures line replaced, door line kept");
