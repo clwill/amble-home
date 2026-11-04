@@ -1,6 +1,6 @@
 # Fixture support matrix
 
-Generated 2026-11-03 by `tools/fixture-matrix.py` from the amaran Desktop app's own tables (`product.json`, `fixture_config.json`, app bundle v1.1.03). Regenerate after an app update or a new test; edit the `TESTED` table in the script, never this file.
+Generated 2026-11-04 by `tools/fixture-matrix.py` from the amaran Desktop app's own tables (`product.json`, `fixture_config.json`, app bundle v1.1.03). Regenerate after an app update or a new test; edit the `TESTED` table in the script, never this file.
 
 **How to read it.** amble-home speaks the mesh's generic light commands (on/off, brightness, color temperature, HSI color, green/magenta, status). Any fixture that the app table says supports one of those should work the same way the tested ones do: the protocol does not change per model, only the capability flags. Effects, per-pixel control, gels and motion are app features and are not mapped (standing rule 3: the amaran app stays the source of truth for the mesh; HA scenes cover the rest).
 
@@ -12,11 +12,11 @@ Generated 2026-11-03 by `tools/fixture-matrix.py` from the amaran Desktop app's 
 | Expected | capability flags match a tested fixture; nobody has driven one through amble-home yet |
 | Unknown | the app table has no capability entry; the importer falls back to on/off and brightness |
 
-Counts: Production 5, Tested 2, Expected 73, Unknown 14 (94 fixtures).
+Counts: Production 6, Tested 2, Expected 72, Unknown 14 (94 fixtures).
 
 | Series | Model | Code | HW | Family | amble-home maps | Not mapped | Status | Note |
 |---|---|---|---|---|---|---|---|---|
-| Accent | B7c | 04005 | 1.0, 2.0, 3.0 | color (HSI) | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
+| Accent | B7c | 04005 | 1.0, 2.0, 3.0 | color (HSI) | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects | **Production** | studio bulb (B7c); paired in the amaran app after the studio was live, imported through the account door with Refresh on the running production box, then from HA on/off, brightness across the range and a range of colors; 2026-11-04 |
 | COB Lights | amaran 100d | 40025 | 1.0 | single color | on/off, brightness | effects | **Production** | studio keys (two); daily HA use since 2026-10-27 |
 | COB Lights | amaran 100d S | 400N5 | 1.0 | single color | on/off, brightness | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran 100x | 40035 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |

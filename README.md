@@ -9,7 +9,7 @@
 - **A standard ESPHome device.** The amble-home box is discovered on its own, updated over the air, with diagnostics on its device page. Nothing runs on a computer afterwards.
 - **And once a light is in Home Assistant** you can run it from Alexa, Google Home, or Siri like any other light. The [Home Assistant](https://github.com/clwill/amble-home/wiki/Home-Assistant) page says where to switch that on.
 
-**Status:** v1.0.0. amble-home has run the author's studio, eight lights through Home Assistant, since 2026-10-29.
+**Status:** amble-home has run the author's studio, nine lights through Home Assistant, since 2026-10-29. The current release is on the [Releases](https://github.com/clwill/amble-home/releases) page and on the flasher page's button.
 
 ## Why this exists
 
