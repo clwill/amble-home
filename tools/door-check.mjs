@@ -127,7 +127,7 @@ const srv = http.createServer((q, s) => {
     }
     if (u === "/amble/identify" && q.method === "POST") return json(s, 200, { ok: true });
     if (q.method !== "GET") { s.statusCode = 405; return s.end(); }
-    if (u === "/amble/status") return json(s, 200, status);
+    if (u === "/amble/status") { if (box.statusDown) { s.statusCode = 500; return s.end(); } return json(s, 200, status); }
     if (u === "/amble/cloud.js") { s.setHeader("content-type", types[".js"]); return s.end(fakeCloud); }
     const f = u === "/amble/edit" ? "edit.html" : u.startsWith("/amble/") ? u.slice(7) : null;
     if (!f || f.includes("..") || !fs.existsSync(dist + "/" + f)) { s.statusCode = 404; return s.end(); }
@@ -450,6 +450,17 @@ try {
     check((await page.$$eval("#rows tr", (t) => t.length)) === dbRows2 && dbRows2 > 0, `stale failure: rows still the database's (${dbRows2})`);
     await pwChecks("slowfail");
   } else console.log("skip: database door (spikes/03-importer/amaran.db not present)");
+
+  // Opening state when there is nothing to show: an unconfigured box, and a box whose status call fails. As before: placeholder, no rows.
+  const emptyOpen = async () => (await page.$$eval("#rows tr", (t) => t.length)) === 0 && !(await page.$eval("#rows-empty", (e) => e.hidden)) && (await page.$eval("table", (e) => e.hidden)) && (await page.$eval("#fixtures-msg", (e) => e.hidden));
+  status.configured = false;
+  await goto();
+  check(await emptyOpen(), "unconfigured box: placeholder shown, no rows on open");
+  status.configured = true; box.statusDown = true;
+  await goto();
+  check(await emptyOpen(), "status call failed: placeholder shown, no rows on open, page still usable");
+  check(await page.$eval("#acct-form", (e) => !e.hidden), "status call failed: account door still offered");
+  box.statusDown = false;
 } finally { await browser.close(); srv.close(); }
 console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed");
 process.exit(failed ? 1 : 0);
