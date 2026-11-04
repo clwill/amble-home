@@ -4,7 +4,7 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
-## Unreleased
+## 1.1.1 (2026-11-04)
 
 - **The Edit page opens with the box's fixtures.** Before any fetch, the page lists the fixtures the box already holds, from the same status call the Home page uses, with the live dot and a working **ID** button on each. ID was only enabled on rows the box held, and those rows existed only after a fetch, so the one moment it was wanted (right after a Save, when the box has rebooted and the list is gone) needed a second fetch (#3). The opening rows cannot be checked: Save needs keys and addresses the status call does not carry, and a line says to fetch from the account or open the database to change the selection. A fetch replaces them with the merged view as before. Page only; no firmware change beyond the embedded page.
 
