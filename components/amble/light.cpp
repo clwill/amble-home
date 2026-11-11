@@ -110,6 +110,7 @@ namespace esphome {
 namespace amble {
 
 static const char *const TAG = "amble.light";
+static const uint32_t LOOK_REPLY_MIN_MS = 200;
 
 light::LightTraits AmbleLight::get_traits() {
   const Fixture &f = this->parent_->fixture(this->index_);
@@ -155,6 +156,7 @@ bool AmbleLight::send_look_(const Look &l) {
   this->ref_ = l;
   this->have_ref_ = true;
   this->sent_intensity_ = l.intensity;
+  this->sent_look_ms_ = millis();
   this->await_look_reply_ = true;
   return true;
 }
@@ -212,8 +214,12 @@ void AmbleLight::apply_status(const telink::Status &st) {
   // or cut it to a whole percent. If it cut it, remember that until the next boot
   // and send the whole percent Home Assistant shows, now and from here on, so the
   // slider never springs back. Fixtures that keep fractions never trip this.
-  bool awaited = this->await_look_reply_;
-  this->await_look_reply_ = false;
+  // A reply already in the air when the command went out (the 15 s poll, the
+  // read-back of the command before) describes the old state and proves nothing:
+  // the box asks for the real one 300 ms after the send, so anything sooner waits.
+  bool awaited = this->await_look_reply_ && millis() - this->sent_look_ms_ >= LOOK_REPLY_MIN_MS;
+  if (awaited)
+    this->await_look_reply_ = false;
   if (awaited && !this->identifying_ && !this->whole_percent_ && truncated_reply(this->sent_intensity_, st.intensity)) {
     this->whole_percent_ = true;
     ESP_LOGI(TAG, "fixture %u keeps whole percent only; sending whole percents from now on", this->index_);

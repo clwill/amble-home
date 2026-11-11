@@ -118,6 +118,7 @@ class AmbleLight : public light::LightOutput {
   bool whole_percent_{false};
   bool await_look_reply_{false};
   uint16_t sent_intensity_{0};
+  uint32_t sent_look_ms_{0};
   bool send_look_(const Look &l);
   Look look_from_values_(const light::LightColorValues &v) const;
 };
