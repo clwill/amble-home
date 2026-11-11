@@ -11,6 +11,36 @@ TEST(wire_intensity_rounds_and_clamps) {
   CHECK_EQ(wire_intensity_from_brightness(-0.2f), 0); CHECK_EQ(wire_intensity_from_brightness(0.6f), 600);
 }
 TEST(brightness_from_wire_inverse) { CHECK(fabsf(brightness_from_wire(600) - 0.6f) < 1e-3f); CHECK(fabsf(brightness_from_wire(2000) - 1.0f) < 1e-6f); CHECK(brightness_from_wire(0) == 0.0f); }
+// ---- whole-percent fixtures: some keep only whole percent and truncate the rest, so
+// 14.9 % comes back as 14.0 % and the slider springs back. The box learns it from the
+// reply and sends the whole percent Home Assistant shows from then on. ---------------
+TEST(truncated_reply_is_the_sent_value_cut_to_a_whole_percent) {
+  CHECK(truncated_reply(149, 140)); CHECK(truncated_reply(39, 30)); CHECK(truncated_reply(4, 0));
+  CHECK(!truncated_reply(149, 149));  // a fractional fixture answers with what it was sent
+  CHECK(!truncated_reply(149, 150));  // rounding up is not truncation
+  CHECK(!truncated_reply(150, 150));  // a whole percent proves nothing
+  CHECK(!truncated_reply(150, 140));  // nor does some other state (the amaran app moved it)
+  CHECK(!truncated_reply(149, 700));
+}
+TEST(whole_percent_rounds_to_what_the_slider_shows) {
+  CHECK_EQ(whole_percent_intensity(149), 150); CHECK_EQ(whole_percent_intensity(145), 150);
+  CHECK_EQ(whole_percent_intensity(144), 140); CHECK_EQ(whole_percent_intensity(150), 150);
+  CHECK_EQ(whole_percent_intensity(1000), 1000); CHECK_EQ(whole_percent_intensity(996), 1000);
+  CHECK_EQ(whole_percent_intensity(0), 0);
+  CHECK_EQ(whole_percent_intensity(4), 10);  // the lowest step stays lit: 1 %, not 0
+  CHECK_EQ(whole_percent_intensity(1), 10);
+}
+TEST(every_slider_percent_survives_a_whole_percent_fixture) {
+  // Home Assistant: percent -> brightness 0..255 -> the box -> wire -> the fixture's reply
+  // -> brightness 0..255 -> the percent shown. Every tick must come back as itself.
+  for (int pct = 1; pct <= 100; pct++) {
+    int ha = (int) lroundf(pct * 255.0f / 100.0f);
+    uint16_t wire = whole_percent_intensity(wire_intensity_from_brightness(ha / 255.0f));
+    CHECK_EQ(wire, pct * 10);
+    int back = (int) lroundf(brightness_from_wire(wire) * 255.0f);
+    CHECK_EQ((int) lroundf(back * 100.0f / 255.0f), pct);
+  }
+}
 TEST(kelvin_mireds_roundtrip) {
   CHECK_EQ(kelvin_from_mireds(400.0f), 2500); CHECK(fabsf(mireds_from_kelvin(2500) - 400.0f) < 0.01f);
   CHECK(fabsf(mireds_from_kelvin(7500) - 133.33f) < 0.01f); CHECK_EQ(kelvin_from_mireds(mireds_from_kelvin(5600)), 5600);

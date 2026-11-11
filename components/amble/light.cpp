@@ -13,6 +13,15 @@ uint16_t wire_intensity_from_brightness(float b) {
   return (uint16_t) lroundf(b * 1000.0f);
 }
 float brightness_from_wire(uint16_t i) { return (i > 1000 ? 1000 : i) / 1000.0f; }
+bool truncated_reply(uint16_t sent, uint16_t reply) { return sent % 10 != 0 && reply == sent - sent % 10; }
+uint16_t whole_percent_intensity(uint16_t i) {
+  if (i == 0)
+    return 0;
+  if (i >= 1000)
+    return 1000;
+  uint16_t r = (uint16_t) ((i + 5) / 10 * 10);
+  return r == 0 ? 10 : r;
+}
 uint16_t kelvin_from_mireds(float mireds) {
   if (!(mireds > 0.0f))
     return 6500;
@@ -118,6 +127,8 @@ Look AmbleLight::look_from_values_(const light::LightColorValues &v) const {
   const Fixture &f = this->parent_->fixture(this->index_);
   Look l;
   l.intensity = wire_intensity_from_brightness(v.get_brightness());
+  if (this->whole_percent_)
+    l.intensity = whole_percent_intensity(l.intensity);
   if (v.get_color_mode() == light::ColorMode::RGB) {
     l.hsi = true;
     hsi_from_rgb(v.get_red(), v.get_green(), v.get_blue(), &l.hue, &l.sat);
@@ -131,6 +142,21 @@ Look AmbleLight::look_from_values_(const light::LightColorValues &v) const {
     l.gm = this->gm_;
   }
   return l;
+}
+
+bool AmbleLight::send_look_(const Look &l) {
+  uint8_t p[telink::PAYLOAD_LEN];
+  if (l.hsi)
+    telink::hsi(l.hue, l.sat, l.intensity, p);
+  else
+    telink::cct(l.kelvin, l.intensity, l.gm, p);
+  if (!this->parent_->send(this->index_, p))
+    return false;
+  this->ref_ = l;
+  this->have_ref_ = true;
+  this->sent_intensity_ = l.intensity;
+  this->await_look_reply_ = true;
+  return true;
 }
 
 bool AmbleLight::realise(const light::LightColorValues &v) {
@@ -147,14 +173,8 @@ bool AmbleLight::realise(const light::LightColorValues &v) {
     this->fixture_on_ = true;
   }
   if (plan.look) {
-    if (target.hsi)
-      telink::hsi(target.hue, target.sat, target.intensity, p);
-    else
-      telink::cct(target.kelvin, target.intensity, target.gm, p);
-    if (!this->parent_->send(this->index_, p))
+    if (!this->send_look_(target))
       return false;
-    this->ref_ = target;
-    this->have_ref_ = true;
   }
   if (plan.power_off) {
     telink::onoff(false, p);
@@ -188,6 +208,24 @@ void AmbleLight::write_state(light::LightState *state) {
 void AmbleLight::apply_status(const telink::Status &st) {
   if (this->state_ == nullptr || !st.valid)
     return;
+  // The first reply after a look command shows whether the fixture kept the value
+  // or cut it to a whole percent. If it cut it, remember that until the next boot
+  // and send the whole percent Home Assistant shows, now and from here on, so the
+  // slider never springs back. Fixtures that keep fractions never trip this.
+  bool awaited = this->await_look_reply_;
+  this->await_look_reply_ = false;
+  if (awaited && !this->identifying_ && !this->whole_percent_ && truncated_reply(this->sent_intensity_, st.intensity)) {
+    this->whole_percent_ = true;
+    ESP_LOGI(TAG, "fixture %u keeps whole percent only; sending whole percents from now on", this->index_);
+    Look fixed = this->ref_;  // the look just commanded
+    fixed.intensity = whole_percent_intensity(this->sent_intensity_);
+    if (fixed.intensity != st.intensity && this->send_look_(fixed)) {
+      // Do not show Home Assistant the truncated value: the corrected one is on its way.
+      this->fixture_on_ = st.on;
+      this->parent_->request_status_after(this->index_, 300);
+      return;
+    }
+  }
   this->fixture_on_ = st.on;
   this->ref_ = look_from_status(st);
   this->have_ref_ = true;

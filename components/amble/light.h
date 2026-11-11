@@ -13,6 +13,14 @@ namespace amble {
 // within the fixture's range, HSI when color is set).
 uint16_t wire_intensity_from_brightness(float b_0_1);
 float brightness_from_wire(uint16_t i_0_1000);
+// Some fixtures keep only whole percent and truncate the rest: 149 on the wire
+// comes back as 140, and Home Assistant's slider springs from 15 to 14. Nothing in
+// the amaran app's tables says which, so the box learns it from the reply.
+// True when `reply` is `sent` cut down to a whole percent (and `sent` was not one).
+bool truncated_reply(uint16_t sent, uint16_t reply);
+// The whole percent Home Assistant shows for this value, on the wire's scale.
+// Anything above zero stays at 1 % or more so "on" is never sent as dark.
+uint16_t whole_percent_intensity(uint16_t i_0_1000);
 uint16_t kelvin_from_mireds(float mireds);
 float mireds_from_kelvin(uint16_t kelvin);
 void hsi_from_rgb(float r, float g, float b, uint16_t *hue_deg, uint8_t *sat_0_100);
@@ -86,6 +94,8 @@ class AmbleLight : public light::LightOutput {
   // What the fixture last reported (off until it has spoken). Rollback target for rejected commands.
   const light::LightColorValues &last_reported() const { return this->last_reported_; }
   bool heard() const { return this->have_ref_; }
+  // Learned from a truncated reply; lasts until the next boot (cheap to relearn).
+  bool whole_percent() const { return this->whole_percent_; }
   // Suppress the write ESPHome issues from LightState::setup() (restore) — it is
   // not a user command and must never reach the mesh.
   void set_in_setup(bool v) { this->in_setup_ = v; }
@@ -104,6 +114,11 @@ class AmbleLight : public light::LightOutput {
   // Reference look for plan_sends: the last status report, or the last accepted look command.
   Look ref_{};
   bool have_ref_{false};
+  // Whole-percent learning: the intensity of the last look command, until its reply arrives.
+  bool whole_percent_{false};
+  bool await_look_reply_{false};
+  uint16_t sent_intensity_{0};
+  bool send_look_(const Look &l);
   Look look_from_values_(const light::LightColorValues &v) const;
 };
 
