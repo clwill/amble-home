@@ -4,7 +4,7 @@ Build history, newest first. Entries older than about 30 days move to `docs/chan
 
 ---
 
-## Unreleased
+## 1.1.2 (2026-11-11)
 
 - **A light set to 15 % stays at 15 %.** Some fixtures keep only whole percent and cut the rest off: Home Assistant's 15 % went out as 14.9 %, the fixture kept 14, and the slider sprang back (#11). The box now learns this from the fixture's own reply. The first time a reply comes back cut to a whole percent, the box marks that fixture, re-sends the whole percent Home Assistant shows, and sends whole percents to it from then on, so the 14 is never shown. Nothing is stored (it is relearned after a restart, on the first command) and nothing is probed (only commands someone actually sent). The lowest slider step goes to such a fixture as 1 % instead of 0.4 %, which it would have kept as 0. Fixtures that keep fractions are sent exactly what they were sent before. Proved on the dev board with a P60c: 14.9 % asked, 15 % read back and held, with the log line `fixture 0 keeps whole percent only`.
 
