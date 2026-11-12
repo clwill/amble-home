@@ -133,7 +133,7 @@ class AmbleLight : public light::LightOutput {
   bool whole_percent_{false};
   // Confirmation: what the last commands asked for, until the first status reply
   // that can describe them. That reply teaches whole-percent fixtures and shows a
-  // command lost on the air, which is sent again, once per command from outside.
+  // command lost on the air, which is sent again, twice at most per command from outside.
   bool await_power_{false};
   bool sent_on_{false};
   bool await_look_{false};

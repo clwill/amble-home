@@ -143,6 +143,9 @@ namespace amble {
 
 static const char *const TAG = "amble.light";
 static const uint32_t REPLY_MIN_MS = 200;
+// Losses come in short clumps: on a box with ten fixtures one lost command in six
+// was lost again on its second try (#14). So two more tries, about a second in all.
+static const uint8_t MAX_RESENDS = 2;
 
 light::LightTraits AmbleLight::get_traits() {
   const Fixture &f = this->parent_->fixture(this->index_);
@@ -213,7 +216,7 @@ bool AmbleLight::realise(const light::LightColorValues &v) {
   Look target = this->look_from_values_(v);
   SendPlan plan = plan_sends(this->have_ref_, this->ref_, this->fixture_on_, v.is_on(), target);
   if (plan.power_on || plan.look || plan.power_off)
-    this->resends_left_ = 1;  // a new command from outside: one second try if it is lost
+    this->resends_left_ = MAX_RESENDS;  // a new command from outside: tried again if it is lost
   // The CCT/HSI commands set the look but do not power the fixture up (Spike 2),
   // so power goes first on the way up and last on the way down. Only believe a
   // power state or a look once its send was accepted.
@@ -278,15 +281,15 @@ void AmbleLight::apply_status(const telink::Status &st) {
       }
       bool lost_power = check_power && st.on != this->sent_on_;
       if (lost_look || lost_power) {
-        // Lost on the air (about one command in a hundred in a burst). One second
-        // try; after that the fixture's own report stands.
+        // Lost on the air (about one command in a hundred in a burst). It is tried
+        // again, MAX_RESENDS times at most; after that the fixture's own report stands.
         if (this->resends_left_ > 0) {
           this->resends_left_--;
           ESP_LOGI(TAG, "fixture %u: %s command did not arrive; sending it again", this->index_,
                    lost_power && lost_look ? "power and look" : (lost_power ? "power" : "look"));
         } else {
-          ESP_LOGW(TAG, "fixture %u: command did not arrive on the second try either; showing what the fixture reports",
-                   this->index_);
+          ESP_LOGW(TAG, "fixture %u: command did not arrive in %u tries; showing what the fixture reports",
+                   this->index_, (unsigned) (MAX_RESENDS + 1));
           lost_look = lost_power = false;
         }
       }
