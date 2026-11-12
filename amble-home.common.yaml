@@ -41,7 +41,13 @@ logger:
   level: INFO
   hardware_uart: USB_SERIAL_JTAG
 
+# States go to Home Assistant the moment they change, not in 100 ms batches. A state
+# still waiting in a batch when the box shuts down (a restart, an update) is sent
+# after ESPHome's disconnect notice; Home Assistant then takes it for the light's
+# fresh state while the light is marked unavailable, and drops the same state as a
+# duplicate after the reconnect, leaving that one light unavailable until a reload.
 api:
+  batch_delay: 0ms
 
 ota:
   - platform: esphome
