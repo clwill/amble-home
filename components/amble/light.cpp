@@ -80,6 +80,28 @@ Look look_from_status(const telink::Status &st) {
   return l;
 }
 
+Look wire_look(const Look &l) {
+  Look w = l;
+  if (w.intensity > 1000)
+    w.intensity = 1000;
+  if (w.hsi) {
+    if (w.hue > 360)
+      w.hue = 360;
+    if (w.sat > 100)
+      w.sat = 100;
+    w.kelvin = 0;
+    w.gm = 0;
+  } else {
+    int t = ((int) w.kelvin + 5) / 10;  // as telink::cct
+    t = t < 80 ? 80 : (t > 2000 ? 2000 : t);
+    w.kelvin = (uint16_t) (t * 10);
+    w.gm = w.gm < -10 ? -10 : (w.gm > 10 ? 10 : w.gm);
+    w.hue = 0;
+    w.sat = 0;
+  }
+  return w;
+}
+
 bool same_look(const Look &a, const Look &b) {
   if (a.hsi != b.hsi || a.intensity != b.intensity)
     return false;
@@ -152,7 +174,7 @@ Look AmbleLight::look_from_values_(const light::LightColorValues &v) const {
     l.kelvin = kelvin;
     l.gm = this->gm_;
   }
-  return l;
+  return wire_look(l);
 }
 
 bool AmbleLight::send_look_(const Look &l) {
@@ -163,6 +185,10 @@ bool AmbleLight::send_look_(const Look &l) {
     telink::cct(l.kelvin, l.intensity, l.gm, p);
   if (!this->parent_->send(this->index_, p))
     return false;
+  if (this->have_ref_ && !same_look(this->ref_, l)) {  // a second try of the same look keeps the first one's
+    this->previous_ = this->ref_;
+    this->have_previous_ = true;
+  }
   this->ref_ = l;
   this->have_ref_ = true;
   this->sent_look_ = l;
@@ -245,7 +271,9 @@ void AmbleLight::apply_status(const telink::Status &st) {
           again.intensity = whole_percent_intensity(this->sent_look_.intensity);
           fix = again.intensity != st.intensity;
         } else {
-          lost_look = look_lost(this->sent_look_, look_from_status(st), this->have_reported_, this->reported_);
+          Look reply = look_from_status(st);
+          lost_look = look_lost(this->sent_look_, reply, this->have_reported_, this->reported_) ||
+                      look_lost(this->sent_look_, reply, this->have_previous_, this->previous_);
         }
       }
       bool lost_power = check_power && st.on != this->sent_on_;

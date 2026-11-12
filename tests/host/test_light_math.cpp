@@ -130,3 +130,30 @@ TEST(look_lost_a_fixture_rounding_the_command_is_not_a_loss) {
   CHECK(!look_lost(hsi(500, 121, 57), hsi(500, 120, 57), true, cct(200, 3200)));
   CHECK(!look_lost(cct(500, 3984), cct(500, 4000), false, Look{}));
 }
+
+// ---- review D1: a request the wire cannot tell from the current look is never sent ----
+TEST(wire_look_is_what_the_encoder_sends) {
+  CHECK(same_look(wire_look(cct(500, 4004)), cct(500, 4000)));
+  CHECK(same_look(wire_look(cct(500, 4005)), cct(500, 4010)));
+  CHECK(same_look(wire_look(cct(1200, 500, 14)), cct(1000, 800, 10)));
+  CHECK(same_look(wire_look(cct(500, 25000, -14)), cct(500, 20000, -10)));
+  CHECK(same_look(wire_look(hsi(500, 400, 120)), hsi(500, 360, 100)));
+  CHECK(same_look(wire_look(hsi(500, 120, 57)), hsi(500, 120, 57)));
+}
+TEST(four_kelvin_from_the_current_look_sends_nothing_and_confirms_nothing) {
+  Look current = cct(500, 4000), target = wire_look(cct(500, 4004));
+  SendPlan p = plan_sends(true, current, true, true, target);
+  CHECK(!p.power_on); CHECK(!p.look); CHECK(!p.power_off);
+  CHECK(!look_lost(target, cct(500, 4000), true, current));   // and were it sent, the reply matches it
+}
+// ---- review D2: two quick commands, the first arrived and the second was lost. The reply
+// shows the first command's look, which is the reference the second one replaced. ----
+TEST(look_lost_when_the_reply_shows_the_command_before) {
+  Look reported = cct(500, 3200), first = cct(500, 4000), second = cct(500, 5600), reply = cct(500, 4000);
+  CHECK(!look_lost(second, reply, true, reported));           // the last report alone cannot tell
+  CHECK(look_lost(second, reply, true, first));               // the look just before does
+  Look r2 = hsi(500, 0, 100), f2 = hsi(500, 120, 100), s2 = hsi(500, 240, 100);
+  CHECK(!look_lost(s2, f2, true, r2));
+  CHECK(look_lost(s2, f2, true, f2));
+  CHECK(!look_lost(second, second, true, first));             // arrived: not lost whatever came before
+}

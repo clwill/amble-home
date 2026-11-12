@@ -37,15 +37,22 @@ struct Look {
   uint8_t sat{0};         // HSI mode
 };
 Look look_from_status(const telink::Status &st);
+// `l` as the command encoder puts it on the wire (kelvin in tens, everything within
+// its range). Every look the box plans, sends or confirms goes through this, so a
+// request the wire cannot tell from the current look (4004 K against 4000 K) is not
+// sent at all and can never be mistaken for a lost command.
+Look wire_look(const Look &l);
 bool same_look(const Look &a, const Look &b);
 
 // Commands are sent unacknowledged, and about one in a hundred is lost on the air
 // when many go out together. The first status reply after a look command tells:
 // true when `reply` shows the command never arrived. Certain signs only: another
 // brightness (a whole-percent cut of the sent one is the fixture's rounding, not a
-// loss), the other colour mode, or exactly the look the fixture reported before the
-// command (`before`). Kelvin, hue and saturation alone are not compared with what
-// was sent, because a fixture may round them and that must not look like a loss.
+// loss), the other colour mode, or exactly a look the fixture had before the command
+// (`before`: its last report, and the look commanded just before this one, which is
+// what it shows when the earlier of two quick commands arrived and the later did
+// not). Kelvin, hue and saturation alone are not compared with what was sent,
+// because a fixture may round them and that must not look like a loss.
 bool look_lost(const Look &sent, const Look &reply, bool have_before, const Look &before);
 
 struct SendPlan {
@@ -136,6 +143,9 @@ class AmbleLight : public light::LightOutput {
   // The look in the fixture's last status report (ref_ also moves on every send).
   Look reported_{};
   bool have_reported_{false};
+  // The reference look the last look command replaced (a report or an earlier command).
+  Look previous_{};
+  bool have_previous_{false};
   bool send_power_(bool on);
   bool send_look_(const Look &l);
   Look look_from_values_(const light::LightColorValues &v) const;
