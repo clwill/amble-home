@@ -353,6 +353,13 @@ void AmbleComponent::request_status_after(uint8_t index, uint32_t delay_ms) {
   this->set_timeout(timer_id(TIMER_STATUS_REQ, index), delay_ms, [this, index]() { this->request_status_(index, false); });
 }
 
+void AmbleComponent::resend_after(uint8_t index, uint32_t delay_ms) {
+  this->set_timeout(timer_id(TIMER_RESEND, index), delay_ms, [this, index]() {
+    if (index < this->lights_.size())
+      this->lights_[index]->send_again();
+  });
+}
+
 void AmbleComponent::publish_last_known(uint8_t index) {
   // Put the entity back to what the fixture last reported (off if never heard).
   // ESPHome has already overwritten remote_values with the rejected target, so

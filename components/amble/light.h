@@ -103,6 +103,8 @@ class AmbleLight : public light::LightOutput {
   void begin_identify();
   void end_identify();
   bool identifying() const { return this->identifying_; }
+  // The delayed next try of a command the first reply showed was lost.
+  void send_again();
 
   int gm() const { return this->gm_; }
   void set_gm(int gm) { this->gm_ = gm; }
@@ -140,6 +142,12 @@ class AmbleLight : public light::LightOutput {
   Look sent_look_{};
   uint32_t sent_ms_{0};
   uint8_t resends_left_{0};
+  // The next try, waiting out the fixture's own transmissions.
+  bool again_pending_{false};
+  bool again_power_{false};
+  bool again_look_{false};
+  Look again_look_value_{};
+  uint32_t again_sent_ms_{0};
   // The look in the fixture's last status report (ref_ also moves on every send).
   Look reported_{};
   bool have_reported_{false};

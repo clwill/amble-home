@@ -56,6 +56,7 @@ class AmbleComponent : public Component {
   bool mesh_ready() const { return this->mesh_.started(); }
   bool send(uint8_t index, const uint8_t payload[telink::PAYLOAD_LEN]);
   void request_status_after(uint8_t index, uint32_t delay_ms);
+  void resend_after(uint8_t index, uint32_t delay_ms);
   void publish_last_known(uint8_t index);
   void set_gm(uint8_t index, int gm);
   void identify(uint8_t index);
@@ -90,7 +91,7 @@ class AmbleComponent : public Component {
     uint16_t kelvin;
   };
   // Timer ids (numeric: the scheduler keeps name pointers, so no local strings).
-  enum TimerKind : uint32_t { TIMER_STATUS_REQ = 0x100, TIMER_STATUS_WAIT = 0x200, TIMER_IDENTIFY = 0x300, TIMER_REBOOT = 0x400 };
+  enum TimerKind : uint32_t { TIMER_STATUS_REQ = 0x100, TIMER_STATUS_WAIT = 0x200, TIMER_IDENTIFY = 0x300, TIMER_REBOOT = 0x400, TIMER_RESEND = 0x500 };
   static uint32_t timer_id(TimerKind k, uint8_t index) { return k | index; }
 
   static void on_access_(const AccessMessage &msg, void *ctx);

@@ -146,6 +146,10 @@ static const uint32_t REPLY_MIN_MS = 200;
 // Losses come in short clumps: on a box with ten fixtures one lost command in six
 // was lost again on its second try (#14). So two more tries, about a second in all.
 static const uint8_t MAX_RESENDS = 2;
+// A fixture goes on repeating its status reply for a moment after the box first
+// hears it, and does not listen meanwhile: a command sent the instant the reply
+// arrives is the one most likely to be lost (#14, bench). So the next try waits.
+static const uint32_t RESEND_DELAY_MS = 150;
 
 light::LightTraits AmbleLight::get_traits() {
   const Fixture &f = this->parent_->fixture(this->index_);
@@ -252,6 +256,8 @@ void AmbleLight::write_state(light::LightState *state) {
 void AmbleLight::apply_status(const telink::Status &st) {
   if (this->state_ == nullptr || !st.valid)
     return;
+  if (this->again_pending_)
+    return;  // another copy of the reply that is already being acted on
   // The first reply after a command shows what became of it. A reply already in
   // the air when the command went out (the 15 s poll, the read-back of the command
   // before) describes the old state and proves nothing: the box asks for the real
@@ -295,19 +301,14 @@ void AmbleLight::apply_status(const telink::Status &st) {
       }
       if (fix || lost_look || lost_power) {
         // Do not show Home Assistant the value that is about to be replaced.
-        bool on = this->sent_on_;
         this->fixture_on_ = st.on;
-        bool sent = false;
-        if (lost_power && on)
-          sent |= this->send_power_(true);
-        if (fix || lost_look)
-          sent |= this->send_look_(again);
-        if (lost_power && !on)
-          sent |= this->send_power_(false);
-        if (sent) {
-          this->parent_->request_status_after(this->index_, 300);
-          return;
-        }
+        this->again_power_ = lost_power;
+        this->again_look_ = fix || lost_look;
+        this->again_look_value_ = again;
+        this->again_sent_ms_ = this->sent_ms_;
+        this->again_pending_ = true;
+        this->parent_->resend_after(this->index_, RESEND_DELAY_MS);
+        return;
       }
     }
   }
@@ -338,6 +339,24 @@ void AmbleLight::apply_status(const telink::Status &st) {
   this->state_->current_values = v;
   this->state_->remote_values = v;
   this->state_->publish_state();
+}
+
+void AmbleLight::send_again() {
+  if (!this->again_pending_)
+    return;
+  this->again_pending_ = false;
+  if (this->identifying_ || !this->parent_->mesh_ready())
+    return;
+  // A newer command may have gone out while this one waited: then its look is the one to send.
+  Look l = this->sent_ms_ == this->again_sent_ms_ ? this->again_look_value_ : this->sent_look_;
+  bool on = this->sent_on_;
+  if (this->again_power_ && on)
+    this->send_power_(true);
+  if (this->again_look_)
+    this->send_look_(l);
+  if (this->again_power_ && !on)
+    this->send_power_(false);
+  this->parent_->request_status_after(this->index_, 300);
 }
 
 void AmbleLight::begin_identify() {
