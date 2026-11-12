@@ -86,6 +86,16 @@ bool same_look(const Look &a, const Look &b) {
   return a.hsi ? (a.hue == b.hue && a.sat == b.sat) : (a.kelvin == b.kelvin && a.gm == b.gm);
 }
 
+bool look_lost(const Look &sent, const Look &reply, bool have_before, const Look &before) {
+  if (same_look(reply, sent))
+    return false;
+  if (reply.hsi != sent.hsi)
+    return true;
+  if (reply.intensity != sent.intensity && !truncated_reply(sent.intensity, reply.intensity))
+    return true;
+  return have_before && same_look(reply, before);
+}
+
 SendPlan plan_sends(bool have_ref, const Look &ref, bool fixture_on, bool target_on, const Look &target) {
   SendPlan p;
   bool differs = have_ref && !same_look(ref, target);
@@ -110,7 +120,7 @@ namespace esphome {
 namespace amble {
 
 static const char *const TAG = "amble.light";
-static const uint32_t LOOK_REPLY_MIN_MS = 200;
+static const uint32_t REPLY_MIN_MS = 200;
 
 light::LightTraits AmbleLight::get_traits() {
   const Fixture &f = this->parent_->fixture(this->index_);
@@ -155,35 +165,38 @@ bool AmbleLight::send_look_(const Look &l) {
     return false;
   this->ref_ = l;
   this->have_ref_ = true;
-  this->sent_intensity_ = l.intensity;
-  this->sent_look_ms_ = millis();
-  this->await_look_reply_ = true;
+  this->sent_look_ = l;
+  this->sent_ms_ = millis();
+  this->await_look_ = true;
+  return true;
+}
+
+bool AmbleLight::send_power_(bool on) {
+  uint8_t p[telink::PAYLOAD_LEN];
+  telink::onoff(on, p);
+  if (!this->parent_->send(this->index_, p))
+    return false;
+  this->fixture_on_ = on;
+  this->sent_on_ = on;
+  this->sent_ms_ = millis();
+  this->await_power_ = true;
   return true;
 }
 
 bool AmbleLight::realise(const light::LightColorValues &v) {
   Look target = this->look_from_values_(v);
   SendPlan plan = plan_sends(this->have_ref_, this->ref_, this->fixture_on_, v.is_on(), target);
-  uint8_t p[telink::PAYLOAD_LEN];
+  if (plan.power_on || plan.look || plan.power_off)
+    this->resends_left_ = 1;  // a new command from outside: one second try if it is lost
   // The CCT/HSI commands set the look but do not power the fixture up (Spike 2),
   // so power goes first on the way up and last on the way down. Only believe a
   // power state or a look once its send was accepted.
-  if (plan.power_on) {
-    telink::onoff(true, p);
-    if (!this->parent_->send(this->index_, p))
-      return false;
-    this->fixture_on_ = true;
-  }
-  if (plan.look) {
-    if (!this->send_look_(target))
-      return false;
-  }
-  if (plan.power_off) {
-    telink::onoff(false, p);
-    if (!this->parent_->send(this->index_, p))
-      return false;
-    this->fixture_on_ = false;
-  }
+  if (plan.power_on && !this->send_power_(true))
+    return false;
+  if (plan.look && !this->send_look_(target))
+    return false;
+  if (plan.power_off && !this->send_power_(false))
+    return false;
   return true;
 }
 
@@ -210,31 +223,68 @@ void AmbleLight::write_state(light::LightState *state) {
 void AmbleLight::apply_status(const telink::Status &st) {
   if (this->state_ == nullptr || !st.valid)
     return;
-  // The first reply after a look command shows whether the fixture kept the value
-  // or cut it to a whole percent. If it cut it, remember that until the next boot
-  // and send the whole percent Home Assistant shows, now and from here on, so the
-  // slider never springs back. Fixtures that keep fractions never trip this.
-  // A reply already in the air when the command went out (the 15 s poll, the
-  // read-back of the command before) describes the old state and proves nothing:
-  // the box asks for the real one 300 ms after the send, so anything sooner waits.
-  bool awaited = this->await_look_reply_ && millis() - this->sent_look_ms_ >= LOOK_REPLY_MIN_MS;
-  if (awaited)
-    this->await_look_reply_ = false;
-  if (awaited && !this->identifying_ && !this->whole_percent_ && truncated_reply(this->sent_intensity_, st.intensity)) {
-    this->whole_percent_ = true;
-    ESP_LOGI(TAG, "fixture %u keeps whole percent only; sending whole percents from now on", this->index_);
-    Look fixed = this->ref_;  // the look just commanded
-    fixed.intensity = whole_percent_intensity(this->sent_intensity_);
-    if (fixed.intensity != st.intensity && this->send_look_(fixed)) {
-      // Do not show Home Assistant the truncated value: the corrected one is on its way.
-      this->fixture_on_ = st.on;
-      this->parent_->request_status_after(this->index_, 300);
-      return;
+  // The first reply after a command shows what became of it. A reply already in
+  // the air when the command went out (the 15 s poll, the read-back of the command
+  // before) describes the old state and proves nothing: the box asks for the real
+  // one 300 ms after the send, so anything sooner waits.
+  bool awaited = (this->await_power_ || this->await_look_) && millis() - this->sent_ms_ >= REPLY_MIN_MS;
+  if (awaited) {
+    bool check_power = this->await_power_, check_look = this->await_look_;
+    this->await_power_ = this->await_look_ = false;
+    if (!this->identifying_) {
+      Look again = this->sent_look_;
+      bool fix = false, lost_look = false;
+      if (check_look) {
+        if (!this->whole_percent_ && truncated_reply(this->sent_look_.intensity, st.intensity)) {
+          // The fixture cut the value to a whole percent. Remember that until the
+          // next boot and send the whole percent Home Assistant shows, now and from
+          // here on, so the slider never springs back. Fixtures that keep fractions
+          // never trip this.
+          this->whole_percent_ = true;
+          ESP_LOGI(TAG, "fixture %u keeps whole percent only; sending whole percents from now on", this->index_);
+          again.intensity = whole_percent_intensity(this->sent_look_.intensity);
+          fix = again.intensity != st.intensity;
+        } else {
+          lost_look = look_lost(this->sent_look_, look_from_status(st), this->have_reported_, this->reported_);
+        }
+      }
+      bool lost_power = check_power && st.on != this->sent_on_;
+      if (lost_look || lost_power) {
+        // Lost on the air (about one command in a hundred in a burst). One second
+        // try; after that the fixture's own report stands.
+        if (this->resends_left_ > 0) {
+          this->resends_left_--;
+          ESP_LOGI(TAG, "fixture %u: %s command did not arrive; sending it again", this->index_,
+                   lost_power && lost_look ? "power and look" : (lost_power ? "power" : "look"));
+        } else {
+          ESP_LOGW(TAG, "fixture %u: command did not arrive on the second try either; showing what the fixture reports",
+                   this->index_);
+          lost_look = lost_power = false;
+        }
+      }
+      if (fix || lost_look || lost_power) {
+        // Do not show Home Assistant the value that is about to be replaced.
+        bool on = this->sent_on_;
+        this->fixture_on_ = st.on;
+        bool sent = false;
+        if (lost_power && on)
+          sent |= this->send_power_(true);
+        if (fix || lost_look)
+          sent |= this->send_look_(again);
+        if (lost_power && !on)
+          sent |= this->send_power_(false);
+        if (sent) {
+          this->parent_->request_status_after(this->index_, 300);
+          return;
+        }
+      }
     }
   }
   this->fixture_on_ = st.on;
   this->ref_ = look_from_status(st);
   this->have_ref_ = true;
+  this->reported_ = this->ref_;
+  this->have_reported_ = true;
   if (this->identifying_)
     return;  // the flash is not the state
   light::LightColorValues v;

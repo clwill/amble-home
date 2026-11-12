@@ -106,3 +106,27 @@ TEST(look_from_status_maps_both_modes) {
   Look m = look_from_status(st); CHECK(m.hsi); CHECK_EQ(m.hue, 120); CHECK_EQ(m.sat, 50);
   CHECK(same_look(l, l)); CHECK(!same_look(l, m)); CHECK(!same_look(cct(200, 3200), cct(200, 3201)));
 }
+
+// ---- look_lost: did the first reply after a look command show the command arrived? ----
+TEST(look_lost_reply_matching_the_command_is_not_lost) {
+  CHECK(!look_lost(cct(500, 5600), cct(500, 5600), true, cct(200, 3200)));
+  CHECK(!look_lost(cct(500, 5600), cct(500, 5600), false, Look{}));
+  // Sent back to the look last reported (a quick there-and-back): arrived.
+  CHECK(!look_lost(cct(200, 3200), cct(200, 3200), true, cct(200, 3200)));
+}
+TEST(look_lost_old_look_in_the_reply_is_lost) {
+  CHECK(look_lost(cct(500, 5600), cct(200, 3200), true, cct(200, 3200)));
+  CHECK(look_lost(cct(200, 5600), cct(200, 3200), true, cct(200, 3200)));     // colour-only change, lost
+  CHECK(look_lost(hsi(200, 120, 100), hsi(200, 0, 100), true, hsi(200, 0, 100)));
+}
+TEST(look_lost_other_brightness_or_mode_is_lost_even_with_nothing_to_compare) {
+  CHECK(look_lost(cct(500, 5600), cct(300, 5600), false, Look{}));
+  CHECK(look_lost(cct(500, 5600), cct(300, 5600), true, cct(200, 3200)));     // an earlier command stuck, this one did not
+  CHECK(look_lost(hsi(500, 120, 100), cct(500, 5600), false, Look{}));
+}
+TEST(look_lost_a_fixture_rounding_the_command_is_not_a_loss) {
+  CHECK(!look_lost(cct(149, 5600), cct(140, 5600), true, cct(200, 3200)));    // whole-percent cut
+  CHECK(!look_lost(cct(500, 3984), cct(500, 4000), true, cct(200, 3200)));    // rounded kelvin
+  CHECK(!look_lost(hsi(500, 121, 57), hsi(500, 120, 57), true, cct(200, 3200)));
+  CHECK(!look_lost(cct(500, 3984), cct(500, 4000), false, Look{}));
+}

@@ -39,6 +39,15 @@ struct Look {
 Look look_from_status(const telink::Status &st);
 bool same_look(const Look &a, const Look &b);
 
+// Commands are sent unacknowledged, and about one in a hundred is lost on the air
+// when many go out together. The first status reply after a look command tells:
+// true when `reply` shows the command never arrived. Certain signs only: another
+// brightness (a whole-percent cut of the sent one is the fixture's rounding, not a
+// loss), the other colour mode, or exactly the look the fixture reported before the
+// command (`before`). Kelvin, hue and saturation alone are not compared with what
+// was sent, because a fixture may round them and that must not look like a loss.
+bool look_lost(const Look &sent, const Look &reply, bool have_before, const Look &before);
+
 struct SendPlan {
   bool power_on{false};
   bool look{false};
@@ -114,11 +123,20 @@ class AmbleLight : public light::LightOutput {
   // Reference look for plan_sends: the last status report, or the last accepted look command.
   Look ref_{};
   bool have_ref_{false};
-  // Whole-percent learning: the intensity of the last look command, until its reply arrives.
   bool whole_percent_{false};
-  bool await_look_reply_{false};
-  uint16_t sent_intensity_{0};
-  uint32_t sent_look_ms_{0};
+  // Confirmation: what the last commands asked for, until the first status reply
+  // that can describe them. That reply teaches whole-percent fixtures and shows a
+  // command lost on the air, which is sent again, once per command from outside.
+  bool await_power_{false};
+  bool sent_on_{false};
+  bool await_look_{false};
+  Look sent_look_{};
+  uint32_t sent_ms_{0};
+  uint8_t resends_left_{0};
+  // The look in the fixture's last status report (ref_ also moves on every send).
+  Look reported_{};
+  bool have_reported_{false};
+  bool send_power_(bool on);
   bool send_look_(const Look &l);
   Look look_from_values_(const light::LightColorValues &v) const;
 };
