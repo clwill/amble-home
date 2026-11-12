@@ -147,7 +147,7 @@ class AmbleLight : public light::LightOutput {
   bool again_power_{false};
   bool again_look_{false};
   Look again_look_value_{};
-  uint32_t again_sent_ms_{0};
+  Look again_actual_{};  // the look the fixture reported when the loss was seen
   // The look in the fixture's last status report (ref_ also moves on every send).
   Look reported_{};
   bool have_reported_{false};

@@ -218,6 +218,17 @@ bool AmbleLight::send_power_(bool on) {
 
 bool AmbleLight::realise(const light::LightColorValues &v) {
   Look target = this->look_from_values_(v);
+  if (this->again_pending_) {
+    // A new command from outside replaces the one whose next try was waiting. That
+    // try is dropped, not carried over: this command is planned against what the
+    // fixture last said it has (power is already the reported one), so whatever is
+    // still wrong is sent as part of it, with its own tries.
+    this->again_pending_ = false;
+    if (this->again_look_) {
+      this->ref_ = this->again_actual_;
+      this->have_ref_ = true;
+    }
+  }
   SendPlan plan = plan_sends(this->have_ref_, this->ref_, this->fixture_on_, v.is_on(), target);
   if (plan.power_on || plan.look || plan.power_off)
     this->resends_left_ = MAX_RESENDS;  // a new command from outside: tried again if it is lost
@@ -305,7 +316,7 @@ void AmbleLight::apply_status(const telink::Status &st) {
         this->again_power_ = lost_power;
         this->again_look_ = fix || lost_look;
         this->again_look_value_ = again;
-        this->again_sent_ms_ = this->sent_ms_;
+        this->again_actual_ = look_from_status(st);
         this->again_pending_ = true;
         this->parent_->resend_after(this->index_, RESEND_DELAY_MS);
         return;
@@ -347,13 +358,11 @@ void AmbleLight::send_again() {
   this->again_pending_ = false;
   if (this->identifying_ || !this->parent_->mesh_ready())
     return;
-  // A newer command may have gone out while this one waited: then its look is the one to send.
-  Look l = this->sent_ms_ == this->again_sent_ms_ ? this->again_look_value_ : this->sent_look_;
   bool on = this->sent_on_;
   if (this->again_power_ && on)
     this->send_power_(true);
   if (this->again_look_)
-    this->send_look_(l);
+    this->send_look_(this->again_look_value_);
   if (this->again_power_ && !on)
     this->send_power_(false);
   this->parent_->request_status_after(this->index_, 300);
