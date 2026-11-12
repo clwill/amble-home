@@ -46,6 +46,10 @@ logger:
 # after ESPHome's disconnect notice; Home Assistant then takes it for the light's
 # fresh state while the light is marked unavailable, and drops the same state as a
 # duplicate after the reconnect, leaving that one light unavailable until a reload.
+# This closes the common case, not every case: ESPHome still queues a state when
+# the connection is backed up or still sending its first full set, and that one
+# can follow the disconnect too. The complete fix is ESPHome's (flush, then say
+# goodbye).
 api:
   batch_delay: 0ms
 
