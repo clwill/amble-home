@@ -1,6 +1,6 @@
 # Fixture support matrix
 
-Generated 2026-11-04 by `tools/fixture-matrix.py` from the amaran Desktop app's own tables (`product.json`, `fixture_config.json`, app bundle v1.1.03). Regenerate after an app update or a new test; edit the `TESTED` table in the script, never this file.
+Generated 2026-11-16 by `tools/fixture-matrix.py` from the amaran Desktop app's own tables (`product.json`, `fixture_config.json`, app bundle v1.1.03). Regenerate after an app update or a new test; edit the `TESTED` table in the script, never this file.
 
 **How to read it.** amble-home speaks the mesh's generic light commands (on/off, brightness, color temperature, HSI color, green/magenta, status). Any fixture that the app table says supports one of those should work the same way the tested ones do: the protocol does not change per model, only the capability flags. Effects, per-pixel control, gels and motion are app features and are not mapped (standing rule 3: the amaran app stays the source of truth for the mesh; HA scenes cover the rest).
 
@@ -12,7 +12,7 @@ Generated 2026-11-04 by `tools/fixture-matrix.py` from the amaran Desktop app's 
 | Expected | capability flags match a tested fixture; nobody has driven one through amble-home yet |
 | Unknown | the app table has no capability entry; the importer falls back to on/off and brightness |
 
-Counts: Production 6, Tested 2, Expected 72, Unknown 14 (94 fixtures).
+Counts: Production 7, Tested 2, Expected 71, Unknown 14 (94 fixtures).
 
 | Series | Model | Code | HW | Family | amble-home maps | Not mapped | Status | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -40,7 +40,7 @@ Counts: Production 6, Tested 2, Expected 72, Unknown 14 (94 fixtures).
 | COB Lights | amaran Halo 60x | 401B5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Ray 120c | 40165 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Ray 360c | 40185 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| COB Lights | amaran Ray 60c | 40145 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
+| COB Lights | amaran Ray 60c | 40145 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | **Production** | studio Ray 60c; paired in the amaran app, imported through the account door on the running production box, then driven from HA with its state read back; 2026-11-16 |
 | COB Lights | amaran Ray 660c | 401A5 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Electro Storm | Electro Storm CS15 | 000K5 | 1.0 | color (HSI) | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects, xy color, gels, motion | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Electro Storm | Electro Storm XT26 | 000J5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K, green/magenta | effects, motion | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
