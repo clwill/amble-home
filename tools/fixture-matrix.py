@@ -24,7 +24,7 @@ TESTED = {
     "40085": ("production", "studio accent; daily HA use since 2026-10-27"),
     "400U5": ("production", "studio hair; daily HA use since 2026-10-27"),
     "04005": ("production", "studio bulb (B7c); paired in the amaran app after the studio was live, imported through the account door with Refresh on the running production box, then from HA on/off, brightness across the range and a range of colors; 2026-11-04"),
-    "40145": ("production", "studio Ray 60c; paired in the amaran app, imported through the account door on the running production box, then driven from HA with its state read back; 2026-11-16"),
+    "40145": ("production", "studio Ray 60c; paired in the amaran app, imported through the account door on the running production box, then from HA on/off, brightness 1–100 %, CCT 2300–10000 K and HSI colors, each read back from the fixture; green/magenta sent; 2026-11-16"),
     "400Z5": ("tested", "Verge Max: imported through the account door, then from HA on/off, brightness 1–100 %, CCT 2700/5000/6500 K, each read back; 2026-10-29"),
 }
 EXPECTED_SOON = {  # exact model name -> note; on order or arriving, a row people can watch
