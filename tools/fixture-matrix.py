@@ -28,6 +28,8 @@ TESTED = {
     "400Z5": ("tested", "Verge Max: imported through the account door, then from HA on/off, brightness 1–100 %, CCT 2700/5000/6500 K, each read back; 2026-10-29"),
 }
 EXPECTED_SOON = {  # exact model name -> note; on order or arriving, a row people can watch
+    "amaran Halo 100x": "on order for the author's studio (ordered 2026-11-16); tested on arrival",
+    "amaran Halo 60x": "on order for the author's studio (ordered 2026-11-16); tested on arrival",
 }
 
 

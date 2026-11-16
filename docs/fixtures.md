@@ -12,7 +12,7 @@ Generated 2026-11-16 by `tools/fixture-matrix.py` from the amaran Desktop app's 
 | Expected | capability flags match a tested fixture; nobody has driven one through amble-home yet |
 | Unknown | the app table has no capability entry; the importer falls back to on/off and brightness |
 
-Counts: Production 7, Tested 2, Expected 71, Unknown 14 (94 fixtures).
+Counts: Production 7, Tested 2, Arriving 2, Expected 69, Unknown 14 (94 fixtures).
 
 | Series | Model | Code | HW | Family | amble-home maps | Not mapped | Status | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -33,11 +33,11 @@ Counts: Production 7, Tested 2, Expected 71, Unknown 14 (94 fixtures).
 | COB Lights | amaran 60x S | 400M5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran COB 60d | 40065 | 1.0 | single color | on/off, brightness | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran COB 60x | 40075 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| COB Lights | amaran Halo 100x | 401C5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
+| COB Lights | amaran Halo 100x | 401C5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Arriving | on order for the author's studio (ordered 2026-11-16); tested on arrival |
 | COB Lights | amaran Halo 200x | 401D5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Halo 300x | 401E5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Halo 600x | 401F5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| COB Lights | amaran Halo 60x | 401B5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
+| COB Lights | amaran Halo 60x | 401B5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Arriving | on order for the author's studio (ordered 2026-11-16); tested on arrival |
 | COB Lights | amaran Ray 120c | 40165 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Ray 360c | 40185 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran Ray 60c | 40145 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | **Production** | studio Ray 60c; paired in the amaran app, imported through the account door on the running production box, then from HA on/off, brightness 1–100 %, CCT 2300–10000 K and HSI colors, each read back from the fixture; green/magenta sent; 2026-11-16 |
