@@ -12,16 +12,16 @@ Generated 2026-11-22 by `tools/fixture-matrix.py` from the amaran Desktop app's 
 | Expected | capability flags match a tested fixture; nobody has driven one through amble-home yet |
 | Unknown | the app table has no capability entry; the importer falls back to on/off and brightness |
 
-Counts: Production 9, Tested 2, Expected 69, Unknown 14 (94 fixtures).
+Counts: Production 7, Tested 4, Expected 69, Unknown 14 (94 fixtures).
 
 | Series | Model | Code | HW | Family | amble-home maps | Not mapped | Status | Note |
 |---|---|---|---|---|---|---|---|---|
 | Accent | B7c | 04005 | 1.0, 2.0, 3.0 | color (HSI) | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects | **Production** | studio bulb (B7c); paired in the amaran app after the studio was live, imported through the account door with Refresh on the running production box, then from HA on/off, brightness across the range and a range of colors; 2026-11-04 |
-| COB Lights | amaran 100d | 40025 | 1.0 | single color | on/off, brightness | effects | **Production** | studio keys (two); daily HA use since 2026-10-27 |
+| COB Lights | amaran 100d | 40025 | 1.0 | single color | on/off, brightness | effects | **Tested** | two units ran the author's studio daily through an amble-home box from 2026-10-27 to 2026-11-22; since replaced |
 | COB Lights | amaran 100d S | 400N5 | 1.0 | single color | on/off, brightness | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran 100x | 40035 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran 100x S | 400O5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| COB Lights | amaran 150c | 400J5 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | **Production** | studio gobo; daily HA use since 2026-10-27 |
+| COB Lights | amaran 150c | 400J5 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | **Tested** | ran the author's studio daily through an amble-home box from 2026-10-27 to 2026-11-16; since replaced |
 | COB Lights | amaran 200c | 400R5 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran 200d | 40045 | 1.0 | single color | on/off, brightness | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | COB Lights | amaran 200d S | 400P5 | 1.0 | single color | on/off, brightness | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
@@ -77,7 +77,7 @@ Counts: Production 9, Tested 2, Expected 69, Unknown 14 (94 fixtures).
 | Mini | MC | 05007 | 1.1 | color (HSI) | on/off, brightness, CCT 3200–6500 K, HSI color | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Mini | MC Pro | 05010 | 1.0 | color (HSI) | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects, xy color, gels | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Mini | MT Pro | 000F5 | 1.0, 2.0 | pixel color | on/off, brightness, CCT 2000–10000 K, HSI color, green/magenta | effects, per-pixel/partition control, xy color, gels | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| Mini Lights | amaran Ace 25c | 400U5 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | **Production** | studio hair; daily HA use since 2026-10-27 |
+| Mini Lights | amaran Ace 25c | 400U5 | 1.0 | color (HSI) | on/off, brightness, CCT 2300–10000 K, HSI color, green/magenta | effects | **Production** | in the author's studio; daily HA use since 2026-10-27 (two units until 2026-11, one since) |
 | Mini Lights | amaran Ace 25x | 400T5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Mini Lights | amaran Go | 400V5 | 1.0 | bi-color (CCT) | on/off, brightness, CCT 2700–6500 K | effects | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Motorized | Motorized F14 Fresnel | EM015 | – | unknown | on/off, brightness (capabilities unknown to the app table) |  | Unknown | no capability entry in the app table; the importer falls back to on/off + brightness |
@@ -108,7 +108,7 @@ Counts: Production 9, Tested 2, Expected 69, Unknown 14 (94 fixtures).
 | Tubes | amaran PT1c | 400G5 | 1.0 | pixel color | on/off, brightness, CCT 2700–10000 K, HSI color, green/magenta | effects, per-pixel/partition control | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Tubes | amaran PT2c | 400H5 | 1.0 | pixel color | on/off, brightness, CCT 2700–10000 K, HSI color, green/magenta | effects, per-pixel/partition control | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
 | Tubes | amaran PT4c | 400I5 | 1.0 | pixel color | on/off, brightness, CCT 2700–10000 K, HSI color, green/magenta | effects, per-pixel/partition control | Expected | same mesh protocol and capability flags as a tested fixture; not yet driven |
-| Tubes | amaran T2c  | 40085 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | **Production** | studio accent; daily HA use since 2026-10-27 |
+| Tubes | amaran T2c  | 40085 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | **Production** | studio hair light; daily HA use since 2026-10-27 |
 | Tubes | amaran T4c  | 40095 | 1.0 | color (HSI) | on/off, brightness, CCT 2500–7500 K, HSI color, green/magenta | effects | **Production** | studio tubes (two); daily HA use since 2026-10-27 |
 
 ## Families, for buying one of each
