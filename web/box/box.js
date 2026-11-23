@@ -19,6 +19,12 @@ export function idFor(mac) {
   return "amble_" + m.split(":").slice(3).join("").toLowerCase();
 }
 
+// The order both pages list fixtures in: by name, ignoring case, numbers in natural
+// order ("Tube 2" before "Tube 10"). Display only: the box keeps its own order (mesh
+// address), and Save sends fixtures in the fetched list's order whatever the rows show.
+const nameOrder = new Intl.Collator("en", { sensitivity: "base", numeric: true });
+export const byName = (a, b) => nameOrder.compare(String(a.name ?? ""), String(b.name ?? ""));
+
 // Edit-page rows: every fixture the database offers, marked configured/live from
 // the box's status. Nothing is pre-checked on a box with no configuration.
 export function rowsFor(extracted, status, source = "account") {
@@ -59,7 +65,7 @@ export function rowsFor(extracted, status, source = "account") {
         configured: true, live: !!f.live, checked: false, change: "gone", source });
     }
   }
-  return rows;
+  return rows.sort(byName);
 }
 
 // Edit-page rows before any fetch: the fixtures the box already holds, from the same
@@ -72,7 +78,7 @@ export function savedRows(status) {
   return status.fixtures.map((f) => ({
     id: f.id, invalid: false, saved: true, mac: null, address: null, hex: "", name: f.name,
     configured: true, live: !!f.live, checked: false, change: null,
-  }));
+  })).sort(byName);
 }
 
 const sourcePhrase = (source) => (source === "database" ? "the database" : "your account");
@@ -182,7 +188,7 @@ export function swatchFor(f) {
 // live (answering), dark (configured, silent for a while), na (never heard).
 export function renderStatus(status) {
   if (!status?.configured) return [];
-  return (status.fixtures ?? []).map((f) => {
+  return [...(status.fixtures ?? [])].sort(byName).map((f) => {
     const heard = f.heard === undefined ? "on" in f : !!f.heard;
     const state = f.live ? "live" : heard ? "dark" : "na";
     let summary = "<NA>";

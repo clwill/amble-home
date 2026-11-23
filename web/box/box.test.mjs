@@ -154,12 +154,15 @@ const ex2 = { fixtures: [
   { mac: "AA:BB:CC:8D:ED:B3", address: 0x1E, name: "P60c bench", caps: {} },  // renamed
   { mac: "AA:BB:CC:00:00:01", address: 0x0C, name: "New one", caps: {} },     // new
 ] };
+const the = (rows, change) => rows.find((r) => r.change === change);
 
 test("rows_change_states", () => {
   const rows = rowsFor(ex2, st2);
-  assert.deepEqual(rows.map((r) => [r.change, r.checked]), [["renamed", true], ["new", false], ["gone", false]]);
-  assert.equal(rows[0].was, "amaran P60c");
-  assert.equal(rows[2].name, "Old lamp"); assert.equal(rows[2].id, "amble_000009"); assert.ok(rows[2].invalid && rows[2].gone);
+  // Listed by name: "New one", "Old lamp", "P60c bench".
+  assert.deepEqual(rows.map((r) => [r.change, r.checked]), [["new", false], ["gone", false], ["renamed", true]]);
+  assert.equal(the(rows, "renamed").was, "amaran P60c");
+  const gone = the(rows, "gone");
+  assert.equal(gone.name, "Old lamp"); assert.equal(gone.id, "amble_000009"); assert.ok(gone.invalid && gone.gone);
   assert.ok(rowsFor(ex2, { configured: false, fixtures: [] }).every((r) => r.change === null));
   assert.equal(rowsFor(extracted, status)[0].change, "same");
 });
@@ -174,12 +177,12 @@ test("change_line_copy", () => {
 
 test("row_html_change_marks", () => {
   const rows = rowsFor(ex2, st2);
-  assert.match(rowHtml(rows[0], 0), /was “amaran P60c”/);
-  assert.match(rowHtml(rows[1], 1), /· new/);
-  const gone = rowHtml(rows[2], 2);
+  assert.match(rowHtml(the(rows, "renamed"), 0), /was “amaran P60c”/);
+  assert.match(rowHtml(the(rows, "new"), 1), /· new/);
+  const gone = rowHtml(the(rows, "gone"), 2);
   assert.match(gone, /no longer in your account/); assert.match(gone, /<input type="checkbox" data-i="2"  disabled>/); assert.match(gone, /data-id="amble_000009"/);
   assert.doesNotMatch(rowHtml(rowsFor(extracted, status)[0], 0), /class="muted change"/);
-  const evil = rowHtml({ ...rows[0], was: '<b>"x"' }, 0);
+  const evil = rowHtml({ ...the(rows, "renamed"), was: '<b>"x"' }, 0);
   assert.match(evil, /was “&lt;b&gt;&quot;x&quot;”/);
 });
 
@@ -201,7 +204,7 @@ test("a status name equal to the truncated long name is not renamed (I2)", () =>
 
 test("an invalid-MAC fetched row has no change class (M6)", () => {
   const rows = rowsFor({ fixtures: [{ mac: "nonsense", address: 3, name: "X" }] }, st2);
-  assert.equal(rows[0].change, null);
+  assert.equal(rows.find((r) => r.name === "X").change, null);
   assert.equal(changeLine(rows.filter((r) => !r.gone)), "");
 });
 
@@ -209,8 +212,8 @@ test("source noun reaches the change line and the gone mark (M4)", () => {
   const rows = rowsFor(ex2, st2, "database");
   assert.match(changeLine(rows, "database"), /1 no longer in the database \(Save removes it/);
   assert.doesNotMatch(changeLine(rows, "database"), /account/);
-  assert.match(rowHtml(rows[2], 2), /no longer in the database/);
-  assert.match(rowHtml(rowsFor(ex2, st2)[2], 2), /no longer in your account/);
+  assert.match(rowHtml(the(rows, "gone"), 2), /no longer in the database/);
+  assert.match(rowHtml(the(rowsFor(ex2, st2), "gone"), 2), /no longer in your account/);
   assert.match(changeLine(rowsFor(ex2, st2)), /no longer in your account/);
 });
 
@@ -229,4 +232,22 @@ test("savedRows: the box's own fixtures on open, ID live, nothing checkable unti
   const evil = savedRows({ configured: true, fixtures: [{ id: "amble_000001", name: "<b>x</b>", live: false }] })[0];
   assert.ok(!/<b>/.test(rowHtml(evil, 0)));
   assert.match(rowHtml(evil, 0), /configured, silent/);
+});
+
+test("both pages list fixtures by name: case ignored, numbers in natural order, the box's order untouched (#16)", () => {
+  const mesh = ["tube 10", "Zoom fill", "Tube 2", "accent", "Key"];   // the box's order (mesh address)
+  const want = ["accent", "Key", "Tube 2", "tube 10", "Zoom fill"];
+  const st = { configured: true, fixtures: mesh.map((name, i) => ({ id: `amble_00000${i}`, name, live: true, heard: true, on: false })) };
+  const before = JSON.stringify(st);
+  assert.deepEqual(renderStatus(st).map((l) => l.name), want);
+  assert.deepEqual(savedRows(st).map((r) => r.name), want);
+  assert.equal(JSON.stringify(st), before, "the status object is not reordered in place");
+  // Fetched rows, with one fixture the fetched list lacks ("Key" is gone): one list, by name.
+  const ex = { keys: { net_key: "n", app_key: "a" }, fixtures: mesh.filter((n) => n !== "Key").map((name) => ({ mac: `AA:BB:CC:00:00:0${mesh.indexOf(name)}`, address: 10 + mesh.indexOf(name), name, caps: {} })) };
+  const rows = rowsFor(ex, st);
+  assert.deepEqual(rows.map((r) => r.name), want);
+  assert.equal(rows.find((r) => r.name === "Key").change, "gone");
+  // Save still sends the fetched list's own order, whatever order the rows show.
+  const sent = selectedPayload(ex, rows.map((r) => ({ ...r, checked: !r.gone })), (result, { selected }) => result.fixtures.filter((f) => selected.includes(f.mac)).map((f) => f.name));
+  assert.deepEqual(sent, mesh.filter((n) => n !== "Key"));
 });
