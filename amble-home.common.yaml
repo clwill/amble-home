@@ -41,15 +41,13 @@ logger:
   level: INFO
   hardware_uart: USB_SERIAL_JTAG
 
-# States go to Home Assistant the moment they change, not in 100 ms batches. A state
-# still waiting in a batch when the box shuts down (a restart, an update) is sent
-# after ESPHome's disconnect notice; Home Assistant then takes it for the light's
-# fresh state while the light is marked unavailable, and drops the same state as a
-# duplicate after the reconnect, leaving that one light unavailable until a reload.
-# This closes the common case, not every case: ESPHome still queues a state when
-# the connection is backed up or still sending its first full set, and that one
-# can follow the disconnect too. The complete fix is ESPHome's (flush, then say
-# goodbye).
+# States go to Home Assistant the moment they change, not in 100 ms batches.
+# Up to ESPHome 2026.10 a state still waiting in a batch when the box shut down
+# (a restart, an update) was sent after the disconnect notice, and Home Assistant
+# could leave that one light unavailable until a reload. ESPHome 2026.11.0 sends
+# waiting states first, which is the complete fix; this setting stays because it
+# costs nothing here and a light's new state reaches Home Assistant sooner
+# (docs/decisions.md, 2026-11-23).
 api:
   batch_delay: 0ms
 
