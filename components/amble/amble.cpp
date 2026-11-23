@@ -114,8 +114,8 @@ void AmbleComponent::create_entities_() {
     auto *st = new light::LightState(out);  // NOLINT
     out->set_state(st);
     st->set_default_transition_length(0);
-    st->set_flash_transition_length(0);
-    st->set_gamma_correct(1.0f);
+    // No gamma and no flash transition: a light created here has no gamma table and no
+    // flash transition length, and ESPHome treats both as "none" (2026.11.0 on).
     App.register_light(st, f.name, hash, 0);
     // ESPHome has no public way to register a component created at boot, so this
     // component drives each LightState's setup()/loop() itself (see loop()).

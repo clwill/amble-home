@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  ESPHOME_VERSION: "2026.10.0"
+  ESPHOME_VERSION: "2026.11.0"
 
 jobs:
   build:

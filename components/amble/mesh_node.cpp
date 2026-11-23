@@ -83,15 +83,17 @@ static uint8_t dev_uuid[16] = {'a', 'm', 'b', 'l', 'e', '-', 'h', 'o', 'm', 'e',
 static esp_ble_mesh_prov_t provision = {.uuid = dev_uuid};
 
 static void prov_cb(esp_ble_mesh_prov_cb_event_t event, esp_ble_mesh_prov_cb_param_t *param) {
-  if (event == ESP_BLE_MESH_PROV_REGISTER_COMP_EVT)
+  if (event == ESP_BLE_MESH_PROV_REGISTER_COMP_EVT) {
     ESP_LOGD(TAG, "stack registered (err %d)", param->prov_register_comp.err_code);
-  else if (event == ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT)
+  } else if (event == ESP_BLE_MESH_NODE_PROV_COMPLETE_EVT) {
     ESP_LOGD(TAG, "node provisioned (net_idx %u)", param->node_prov_complete.net_idx);
+  }
 }
 static void model_cb(esp_ble_mesh_model_cb_event_t event, esp_ble_mesh_model_cb_param_t *param) {
-  if (event == ESP_BLE_MESH_MODEL_OPERATION_EVT)
+  if (event == ESP_BLE_MESH_MODEL_OPERATION_EVT) {
     ESP_LOGD(TAG, "message addressed to us: op 0x%06lx len %u", (unsigned long) param->model_operation.opcode,
              param->model_operation.length);
+  }
 }
 
 bool MeshNode::start(const Config &cfg) {
