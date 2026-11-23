@@ -4,6 +4,14 @@ Durable rationale for amble-home. Check here before questioning why something is
 
 ---
 
+## 2026-11-23 — Built on ESPHome 2026.11.0; the zero batch delay stays; fixtures are listed by name
+
+**Decision (Claude's implementation; Chris approved the name order on #16).** amble-home builds on ESPHome 2026.11.0, the first release that sends an entity's waiting states before it tells Home Assistant it is disconnecting (esphome/esphome#22625, from our report). `api: batch_delay: 0ms`, the 1.1.3 protection against the same bug, stays in the config. The Home and Edit pages list fixtures by name, ignoring case, with numbers in natural order; the box keeps storing them by mesh address and Save sends them in the fetched list's order.
+
+**Why.** The fix at the source closes the gap that the zero batch delay only narrowed: on the dev board with ESPHome's default 100 ms batching, 0 of 23 provoked restarts sent a state after the disconnect request, against 3 of 4 on 2026.10.0. The zero delay stays because it costs nothing measurable on a box whose states change a few times a second at most, it makes a light's new state reach Home Assistant up to 100 ms sooner, and the upstream fix leaves out builds with deep sleep, so the setting is the only protection if a variant ever adds it. Name order is display only because "fixture N" in the logs and the stored table must mean the same light before and after an update.
+
+**Rejected.** Waiting for a later ESPHome release (the fix is in 2026.11.0 and the bench shows nothing else changed for us); dropping the zero batch delay now that the source is fixed (no gain, and one protection fewer); sorting the stored table itself (it would renumber fixtures in logs and change what an update does on every box for a display preference); a user-chosen order (nobody asked, and the amaran app is where names are set).
+
 ## 2026-11-12 — A lost command is detected from the status reply and tried again, after a pause, twice at most
 
 **Decision (Claude's implementation; Chris approved the scope, then the second re-send, on #14).** The box confirms each light command from the first status reply that arrives at least 200 ms after it. A command that reply shows was lost is tried again 150 ms later, twice at most per command from outside. "Lost" means certain signs only: the wrong power state, another brightness than was sent (a whole-percent cut is the fixture's rounding), the other color mode, or exactly a look the fixture had before the command (its last report, or the look commanded just before). Color temperature, hue and saturation alone are never compared with what was sent. A new command from outside drops a waiting try and is planned against what the fixture last reported.
