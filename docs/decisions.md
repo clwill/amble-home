@@ -4,6 +4,14 @@ Durable rationale for amble-home. Check here before questioning why something is
 
 ---
 
+## 2026-11-27 — No fine brightness control; a light is a standard Home Assistant light
+
+**Decision (Chris, on #12).** amble-home does not add a separate 0.1 % brightness control beside each light. Every fixture stays a standard Home Assistant light with the standard brightness slider and nothing else for brightness.
+
+**Why.** Chris strongly prefers the lights to be plain, standard lights. The need behind the idea, a light that is too bright at the bottom of its dial, is better solved at the light: neutral-density gel brings the working level up into the range where a step of one or two percent is fine enough. A fixture that keeps tenths of a percent (the Halo 60x reported 0.1, 0.4 and 0.5 % back) still receives exactly what Home Assistant asks for, so nothing is lost.
+
+**Rejected.** A fine control on every fixture, disabled by default (extra entities on every light for a problem gel solves); a fine control only on fixtures known to keep fractions (the same, with more moving parts). **Revisit if** a user reports a fixture where gel is not practical and whole-percent steps are too coarse.
+
 ## 2026-11-23 — Built on ESPHome 2026.11.0; the zero batch delay stays; fixtures are listed by name
 
 **Decision (Claude's implementation; Chris approved the name order on #16).** amble-home builds on ESPHome 2026.11.0, the first release that sends an entity's waiting states before it tells Home Assistant it is disconnecting (esphome/esphome#22625, from our report). `api: batch_delay: 0ms`, the 1.1.3 protection against the same bug, stays in the config. The Home and Edit pages list fixtures by name, ignoring case, with numbers in natural order; the box keeps storing them by mesh address and Save sends them in the fetched list's order.
